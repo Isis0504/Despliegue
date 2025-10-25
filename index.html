@@ -17,6 +17,15 @@
     <a href="registro.html">Registrarse</a>
   </main>
 
+  <!-- Variables de entorno que Netlify reemplazará -->
+  <script>
+    window.ENV = {
+      SUPABASE_URL: "{{SUPABASE_URL}}",
+      SUPABASE_ANON_KEY: "{{SUPABASE_ANON_KEY}}"
+    };
+  </script>
+
+  <!-- Script de redirección según rol -->
   <script type="module">
     const usuario = JSON.parse(localStorage.getItem("usuario"));
     if (usuario) {
