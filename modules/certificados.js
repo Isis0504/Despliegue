@@ -110,27 +110,49 @@ async function renderUsuario(contenedor, usuario_id) {
    🔹 Vista Administrador
    ======================================================= */
 async function renderAdmin(contenedor) {
-  const div = contenedor.querySelector("#certificados-contenido");
-  
-  // APLICACIÓN DE ESTILO: Clase al título de sección y a la tabla (tablaEstilo)
-  div.innerHTML = `
-    <h3 class="tituloModulo" style="font-size: 1.5rem;">📋 Solicitudes de Certificados</h3>
-    <table class="tablaEstilo" width="100%"> 
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th>Tipo</th>
-          <th>Comentario</th>
-          <th>Estado</th>
-          <th>Archivo</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tabla-admin-certificados"></tbody>
-    </table>
-  `;
-  await cargarSolicitudesAdmin();
+
+  const div = contenedor.querySelector("#certificados-contenido");
+
+  div.innerHTML = `
+
+    <h3>📋 Solicitudes de Certificados</h3>
+
+    <table border="1" cellspacing="0" cellpadding="5" width="100%">
+
+      <thead>
+
+        <tr>
+
+          <th>Usuario</th>
+
+          <th>Tipo</th>
+
+          <th>Comentario</th>
+
+          <th>Estado</th>
+
+          <th>Archivo</th>
+
+          <th>Acciones</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="tabla-admin-certificados"></tbody>
+
+    </table>
+
+  `;
+
+  await cargarSolicitudesAdmin();
+
 }
+
+
+
+/*
+
 
 
 /* =======================================================
@@ -242,51 +264,74 @@ async function cargarSolicitudesUsuario(usuario_id) {
    🔸 Funciones para Administrador
    ======================================================= */
 async function cargarSolicitudesAdmin() {
-  const { data, error } = await supabase
-    .from("solicitudes_certificados")
-    .select("*, usuarios(nombre)")
-    .order("fecha_solicitud", { ascending: false });
 
-  if (error) return console.error(error);
+  const { data, error } = await supabase
 
-  const tabla = document.getElementById("tabla-admin-certificados");
-  tabla.innerHTML = "";
+    .from("solicitudes_certificados")
 
-  // APLICACIÓN DE ESTILO: Fila de la tabla con clases de estado y botones
-  data.forEach((item) => {
-    const fila = document.createElement("tr");
+    .select("*, usuarios(nombre)")
 
-    // Definir la clase de estado
-    let estadoClass = '';
-    if (item.estado === 'aprobado') {
-      estadoClass = 'status-resuelta';
-    } else if (item.estado === 'pendiente') {
-      estadoClass = 'status-pendiente';
-    } else {
-      estadoClass = 'status-tag';
-    }
+    .order("fecha_solicitud", { ascending: false });
 
-    fila.innerHTML = `
-      <td>${item.usuarios?.nombre || "—"}</td>
-      <td>${item.tipo === "residencia" ? "Residencia" : "Autorización"}</td>
-      <td>${item.comentario || "—"}</td>
-      <td><span class="status-tag ${estadoClass}">${item.estado.toUpperCase()}</span></td> 
-      <td>
-        ${item.archivo_url ? `<a href="${item.archivo_url}" target="_blank">📄 Ver Archivo</a>` : "—"}
-      </td>
-      <td>
-        <input type="file" id="file-${item.id}" style="margin-bottom:4px;" class="small-file-input"><br>
-        <div class="form-actions" style="justify-content: flex-start; margin-top: 4px;">
-          <button onclick="aprobarCertificado('${item.id}')" class="btnPrimario btn-small">✅ Aprobar</button> 
-          <button onclick="rechazarCertificado('${item.id}')" class="btnSecundario btn-small" style="background-color: #ffe0b2; color: #f57c00;">❌ Rechazar</button> 
-          <button onclick="subirCertificadoPDF('${item.id}')" class="btnPrimario btn-small">⬆️ Subir PDF</button> 
-        </div>
-      </td>
-    `;
 
-    tabla.appendChild(fila);
-  });
+
+  if (error) return console.error(error);
+
+
+
+  const tabla = document.getElementById("tabla-admin-certificados");
+
+  tabla.innerHTML = "";
+
+
+
+  data.forEach((item) => {
+
+    const fila = document.createElement("tr");
+
+
+
+    fila.innerHTML = `
+
+      <td>${item.usuarios?.nombre || "—"}</td>
+
+      <td>${item.tipo}</td>
+
+      <td>${item.comentario || "—"}</td>
+
+      <td>${item.estado}</td>
+
+      <td>
+
+        ${item.archivo_url ? `<a href="${item.archivo_url}" target="_blank">📄 Ver</a>` : "—"}
+
+      </td>
+
+      <td>
+
+        <input type="file" id="file-${item.id}" style="margin-bottom:4px;"><br>
+
+        <button onclick="aprobarCertificado('${item.id}')">✅ Aprobar</button>
+
+        <button onclick="rechazarCertificado('${item.id}')">❌ Rechazar</button>
+
+        <button onclick="subirCertificadoPDF('${item.id}')">⬆️ Subir PDF</button>
+
+      </td>
+
+    `;
+
+
+
+    tabla.appendChild(fila);
+
+  });
+
 }
+
+
+
+/*
 
 
 /* =======================================================
@@ -298,7 +343,11 @@ window.aprobarCertificado = async (id) => {
     .from("solicitudes_certificados")
     .update({ estado: "aprobado", fecha_respuesta: new Date() })
     .eq("id", id);
-  if (error) return console.error(error);
+  if (error) {
+    mostrarMensaje("Error al aprobar solicitud.", "error"); // Mensaje de error
+    return console.error(error);
+  }
+  mostrarMensaje("Solicitud aprobada correctamente.", "success"); // ✅ Mensaje de éxito
   cargarSolicitudesAdmin();
 };
 
@@ -307,7 +356,11 @@ window.rechazarCertificado = async (id) => {
     .from("solicitudes_certificados")
     .update({ estado: "rechazado", fecha_respuesta: new Date() })
     .eq("id", id);
-  if (error) return console.error(error);
+  if (error) {
+    mostrarMensaje("Error al rechazar solicitud.", "error"); // Mensaje de error
+    return console.error(error);
+  }
+  mostrarMensaje("Solicitud rechazada correctamente.", "success"); // ✅ Mensaje de éxito
   cargarSolicitudesAdmin();
 };
 

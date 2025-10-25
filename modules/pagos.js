@@ -1,5 +1,6 @@
 import { supabase } from "../js/supabaseClient.js";
 import { verificarSesion } from "../js/auth.js";
+import { mostrarMensaje, mostrarConfirmacion } from "../js/utils.js";
 
 await verificarSesion(["administrador", "residente", "comite"]);
 
@@ -206,8 +207,8 @@ function renderTabla(pagosDiv, pagos) {
  * Formulario de registro de pago
  * ───────────────────────────────*/
 function mostrarFormularioPago() {
-  const formContainer = document.getElementById("formPagoContainer");
-  formContainer.classList.remove("hidden");
+  const formContainer = document.getElementById("formPagoContainer");
+  formContainer.classList.remove("hidden");
 
   formContainer.innerHTML = `
     <h3>Registrar nuevo pago</h3>
@@ -235,43 +236,45 @@ function mostrarFormularioPago() {
   `;
 
   document.getElementById("cancelar").addEventListener("click", () => {
-    formContainer.classList.add("hidden");
-    formContainer.innerHTML = "";
-  });
+    formContainer.classList.add("hidden");
+    formContainer.innerHTML = "";
+  });
 
-  document.getElementById("formPago").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  document.getElementById("formPago").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    const monto = document.getElementById("monto").value;
-    const fecha_pago = document.getElementById("fecha_pago").value;
-    const mes_correspondiente = document.getElementById("mes_correspondiente").value;
-    const descripcion = document.getElementById("descripcion").value;
-    const archivo = document.getElementById("soporte").files[0];
+    const monto = document.getElementById("monto").value;
+    const fecha_pago = document.getElementById("fecha_pago").value;
+    const mes_correspondiente = document.getElementById("mes_correspondiente").value;
+    const descripcion = document.getElementById("descripcion").value;
+    const archivo = document.getElementById("soporte").files[0];
 
-    if (!archivo) {
-      alert("Por favor, sube el soporte del pago.");
-      return;
-    }
+    if (!archivo) {
+      // 2. REEMPLAZO 1: alert por mostrarMensaje (error)
+      mostrarMensaje("Por favor, sube el soporte del pago.", "error"); 
+      return;
+    }
 
-    const nombreArchivo = `${usuario.id}_${Date.now()}_${archivo.name}`;
-    const { error: errorUpload } = await supabase.storage
-      .from("soportes")
-      .upload(nombreArchivo, archivo);
+    const nombreArchivo = `${usuario.id}_${Date.now()}_${archivo.name}`;
+    const { error: errorUpload } = await supabase.storage
+      .from("soportes")
+      .upload(nombreArchivo, archivo);
 
-    if (errorUpload) {
-      console.error("Error subiendo archivo:", errorUpload);
-      alert("No se pudo subir el soporte.");
-      return;
-    }
+    if (errorUpload) {
+      console.error("Error subiendo archivo:", errorUpload);
+      // 2. REEMPLAZO 2: alert por mostrarMensaje (error)
+      mostrarMensaje("No se pudo subir el soporte.", "error");
+      return;
+    }
 
-    const { data: publicURLData } = supabase.storage
-      .from("soportes")
-      .getPublicUrl(nombreArchivo);
-    const soporte_url = publicURLData.publicUrl;
+    const { data: publicURLData } = supabase.storage
+      .from("soportes")
+      .getPublicUrl(nombreArchivo);
+    const soporte_url = publicURLData.publicUrl;
 
-    const { error: errorInsert } = await supabase.from("pagos").insert([
-      {
-        usuario_id: usuario.id,
+    const { error: errorInsert } = await supabase.from("pagos").insert([
+      {
+        usuario_id: usuario.id,
         monto,
         fecha_pago,
         mes_correspondiente,
@@ -282,39 +285,48 @@ function mostrarFormularioPago() {
     ]);
 
     if (errorInsert) {
-      console.error("Error guardando pago:", errorInsert);
-      alert("Hubo un error al guardar el pago.");
-      return;
-    }
+      console.error("Error guardando pago:", errorInsert);
+      // 2. REEMPLAZO 3: alert por mostrarMensaje (error)
+      mostrarMensaje("Hubo un error al guardar el pago.", "error");
+      return;
+    }
 
-    alert("Pago registrado correctamente. Quedará pendiente de aprobación.");
-    formContainer.classList.add("hidden");
-    formContainer.innerHTML = "";
-    cargarPagos();
-  });
+    // 2. REEMPLAZO 4: alert por mostrarMensaje (success)
+    mostrarMensaje("Pago registrado correctamente. Quedará pendiente de aprobación.", "success");
+    formContainer.classList.add("hidden");
+    formContainer.innerHTML = "";
+    cargarPagos();
+  });
 }
 
 /** ───────────────────────────────
  * Cambiar estado del pago (solo admin)
  * ───────────────────────────────*/
 async function actualizarEstadoPago(id, nuevoEstado) {
-  if (!confirm(`¿Seguro que deseas marcar este pago como "${nuevoEstado}"?`)) {
-    return;
-  }
+    // >>> REEMPLAZO DE 'confirm' por 'mostrarConfirmacion'
+    const mensaje = `¿Seguro que deseas marcar este pago como "${nuevoEstado}"?`;
+    const confirmado = await mostrarConfirmacion(mensaje);
+    
+    if (!confirmado) { 
+      return; // Si el usuario cancela en el modal, salimos.
+    }
+    // <<< FIN DEL REEMPLAZO
 
-  const { error } = await supabase
-    .from("pagos")
-    .update({ estado: nuevoEstado })
-    .eq("id", id);
+    const { error } = await supabase
+      .from("pagos")
+      .update({ estado: nuevoEstado })
+      .eq("id", id);
 
-  if (error) {
-    console.error("Error actualizando estado:", error);
-    alert("No se pudo actualizar el estado del pago.");
-    return;
-  }
+    if (error) {
+      console.error("Error actualizando estado:", error);
+      mostrarMensaje("No se pudo actualizar el estado del pago.", "error");
+      return;
+    }
 
-  alert(`Pago marcado como ${nuevoEstado}.`);
-  cargarPagos();
+    const mensajeFinal = `Pago marcado como ${nuevoEstado}.`;
+    const tipo = nuevoEstado === "aprobado" ? "success" : "info";
+    mostrarMensaje(mensajeFinal, tipo);
+    cargarPagos();
 }
 
 /** ───────────────────────────────

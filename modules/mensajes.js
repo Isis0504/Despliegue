@@ -243,9 +243,9 @@ function montarFormActividad() {
     <input id="tituloActividad" placeholder="Título actividad" />
     <input id="fechaActividad" type="date" />
     <div class="form-actions">
-      <button id="btnAgregarActividad" class="btn">Agregar</button>
-      <button id="btnLimpiarActividad" class="btn ghost">Limpiar</button>
-    </div>
+      <button id="btnAgregarActividad" class="btnPrimario">Agregar</button>
+      <button id="btnLimpiarActividad" class="btn ghost">Limpiar</button>
+    </div>
   `;
   document.getElementById("btnAgregarActividad").addEventListener("click", agregarActividad);
   document.getElementById("btnLimpiarActividad").addEventListener("click", () => {
@@ -267,16 +267,100 @@ async function agregarActividad() {
   await cargarCalendario("administrador");
 }
 
-async function editarActividad(actividad) {
-  const nuevoTitulo = prompt("Editar título:", actividad.titulo);
-  if (nuevoTitulo === null) return;
-  const nuevaFecha = prompt("Editar fecha (YYYY-MM-DD):", actividad.fecha);
-  if (nuevaFecha === null) return;
+function abrirModalEdicionActividad(actividad) {
+    // Si ya existe, lo eliminamos
+    const existingModal = document.getElementById("modalActividad");
+    if (existingModal) existingModal.remove();
 
-  const { error } = await supabase.from("actividades").update({ titulo: nuevoTitulo, fecha: nuevaFecha }).eq("id", actividad.id);
-  if (error) { console.error(error); return mostrarMensaje("No se pudo editar", "error"); }
-  mostrarMensaje("Actividad actualizada", "success");
-  await cargarCalendario("administrador");
+    const modalHTML = `
+        <div id="modalActividad" class="modal-backdrop" style="display:flex; justify-content:center; align-items:center; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 1000;">
+            <div class="modal-content card" style="background:white; padding:20px; border-radius:8px; width: 350px;">
+                <h3 style="margin-top:0;">Editar Título y Fecha</h3>
+                <div class="input-group">
+                    <label>Título:</label>
+                    <input type="text" id="modalTituloActividad" value="${actividad.titulo}" />
+                </div>
+                <div class="input-group" style="margin-top:10px;">
+                    <label>Fecha:</label>
+                    <input type="date" id="modalFechaActividad" value="${actividad.fecha}" />
+                </div>
+                <div class="form-actions" style="margin-top: 20px; display:flex; justify-content: flex-end; gap: 10px;">
+                    <button id="btnAceptarModal" class="btnPrimario">Aceptar</button>
+                    <button id="btnCancelarModal" class="btn ghost">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modal = document.getElementById("modalActividad");
+
+    // Lógica para cerrar el modal
+    const cerrarModal = () => modal.remove();
+    document.getElementById("btnCancelarModal").addEventListener("click", cerrarModal);
+    
+    // Lógica para guardar la edición
+    document.getElementById("btnAceptarModal").addEventListener("click", () => {
+        const nuevoTitulo = document.getElementById("modalTituloActividad").value.trim();
+        const nuevaFecha = document.getElementById("modalFechaActividad").value;
+
+        if (!nuevoTitulo || !nuevaFecha) {
+            return mostrarMensaje("Completa el título y la fecha.", "error");
+        }
+        
+        // Llamar a la función de guardado
+        guardarEdicionActividad(actividad.id, nuevoTitulo, nuevaFecha);
+        cerrarModal();
+    });
+}
+
+// Función auxiliar para guardar (similar a la original, pero toma los datos del modal)
+async function guardarEdicionActividad(id, titulo, fecha) {
+    const { error } = await supabase.from("actividades")
+        .update({ titulo: titulo, fecha: fecha })
+        .eq("id", id);
+
+    if (error) { 
+        console.error("Error al editar actividad:", error); 
+        return mostrarMensaje("No se pudo actualizar la actividad.", "error"); 
+    }
+    
+    mostrarMensaje("Actividad actualizada ✅", "success");
+    await cargarCalendario("administrador");
+}
+
+async function editarActividad(actividad) {
+  // 1. Editar Título
+  abrirModalEdicionActividad(actividad);
+  if (nuevoTitulo === null) return; // Canceló
+  nuevoTitulo = nuevoTitulo.trim();
+  if (nuevoTitulo === "") {
+    mostrarMensaje("El título no puede estar vacío.", "error");
+    return;
+  }
+
+  // 2. Editar Fecha (Se mantiene el prompt simple)
+  let nuevaFecha = prompt("Editar fecha (Formato: YYYY-MM-DD):", actividad.fecha);
+  if (nuevaFecha === null) return; // Canceló
+  nuevaFecha = nuevaFecha.trim();
+  if (nuevaFecha === "") {
+    mostrarMensaje("La fecha no puede estar vacía.", "error");
+    return;
+  }
+
+  // 3. Actualizar
+  const { error } = await supabase.from("actividades")
+    .update({ titulo: nuevoTitulo, fecha: nuevaFecha })
+    .eq("id", actividad.id);
+
+  // 4. Manejo de error y mensaje de éxito
+  if (error) {
+    console.error("Error al editar actividad:", error);
+    return mostrarMensaje("No se pudo actualizar la actividad. Revisa el formato de fecha (YYYY-MM-DD).", "error");
+  }
+  
+  mostrarMensaje("Actividad actualizada ✅", "success");
+  await cargarCalendario("administrador");
 }
 
 async function eliminarActividad(id) {

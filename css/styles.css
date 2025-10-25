@@ -314,6 +314,23 @@ input:focus, select:focus, textarea:focus {
     background-color: var(--verde-oscuro);
 }
 
+.authBox .link {
+    margin-top: 15px;
+    font-size: 0.95rem;
+}
+
+/* Estilo del enlace de registro */
+.authBox .link a {
+    color: var(--verde-principal);
+    text-decoration: none; /* Quita el subrayado */
+    font-weight: 600; 
+    transition: color 0.2s, text-decoration 0.2s;
+}
+
+.authBox .link a:hover {
+    color: var(--verde-oscuro);
+    text-decoration: underline; /* Añade subrayado al pasar el ratón */
+}
 
 /* ================================================= */
 /* ESTILOS ARMÓNICOS PARA MENSAJES/CALENDARIO DINÁMICO */
@@ -533,61 +550,116 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ===============================
-   AJUSTE CRÍTICO PARA TABLAS DE ADMINISTRADOR
+   NOTIFICACIONES FLOTANTES (TOAST)
    =============================== */
-
-/* 1. CLASE PRINCIPAL: Fuerza el diseño de tabla fijo y quita el espaciado entre celdas */
-.tabla-admin-simple {
-    border-spacing: 0 0px !important; 
-    border-collapse: collapse !important; 
-    width: 100%;
-    table-layout: fixed; /* <<-- CLAVE: Fuerzas a la tabla a respetar los anchos definidos */
-    margin-top: 20px;
-}
-
-/* 2. ESTILO DE CELDAS: Quita los estilos de "tarjeta" que generan el espacio */
-.tabla-admin-simple th,
-.tabla-admin-simple td {
-    background-color: var(--blanco) !important; 
-    box-shadow: none !important; /* Elimina la sombra que simula una tarjeta */
-    border: 1px solid #e0e0e0 !important; /* Borde simple para separar celdas */
-    border-radius: 0 !important; /* Quita el redondeo de esquinas */
-    padding: 8px 10px !important; 
-    text-align: left !important;
-    vertical-align: middle !important; /* Alinea el contenido de la celda al tope */
-    font-size: 0.9rem;
-    line-height: 1.2;
-    overflow: hidden; /* Evita que el contenido muy largo desborde */
-}
-
-/* 3. ENCABEZADOS: Asegura que el borde superior sea el de tu diseño */
-.tabla-admin-simple th {
-    background-color: var(--gris-fondo) !important; 
-    border-top: 2px solid var(--verde-principal) !important; 
-    border-bottom: 2px solid var(--verde-principal) !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 0.85rem !important;
-    color: var(--gris-texto) !important;
-}
-
-
-/* 4. ACCIONES: Contenedor flexible para los botones */
-.acciones-admin-wrap {
+#toast-container {
+    /* Fijo en la esquina inferior derecha */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    /* Asegura que esté por encima de casi todo */
+    z-index: 1000; 
     display: flex;
-    flex-wrap: wrap; /* Permite que los botones salten de línea si el espacio es muy reducido */
-    gap: 4px; 
-    margin-top: 5px;
-    align-items: center;
+    /* Muestra los mensajes nuevos abajo de los viejos */
+    flex-direction: column-reverse; 
+    gap: 10px;
+    max-width: 300px;
 }
 
-/* 5. INPUT FILE: Ajusta el input dentro de la celda de acciones */
-.tabla-admin-simple input[type="file"] {
-    width: 100%; 
-    padding: 6px 8px; 
-    margin-bottom: 5px;
-    border: 1px solid #ccc;
-    font-size: 0.85rem;
-    box-shadow: none;
-    background-color: var(--gris-fondo);
+.toast-message {
+    background-color: var(--blanco);
+    color: var(--gris-texto);
+    padding: 12px 15px;
+    border-radius: var(--radius-soft);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    /* Estado inicial: invisible y fuera de la pantalla */
+    opacity: 0;
+    transform: translateX(100%);
+    /* Transición para la animación de entrada y salida */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+/* Estado final: visible y en posición */
+.toast-message.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Estilos de color por tipo de mensaje (usando tus variables) */
+.toast-message.success {
+    border-left: 5px solid var(--verde-principal);
+    background-color: #e8f5e9; /* Verde muy claro */
+}
+
+.toast-message.error {
+    /* Usando un color de error estándar, ya que no tienes una variable roja */
+    border-left: 5px solid #d32f2f; 
+    background-color: #ffebee; 
+}
+
+.toast-message.info {
+    /* Azul para información general */
+    border-left: 5px solid #1976d2; 
+    background-color: #e3f2fd; 
+}
+
+@media (max-width: 500px) {
+    /* En móviles, centrar en la parte inferior */
+    #toast-container {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+/* ===============================
+   MODAL DE CONFIRMACIÓN (REEMPLAZO DE CONFIRM)
+   =============================== */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Más alto que el toast */
+}
+
+.custom-modal {
+    background-color: var(--blanco);
+    padding: 25px;
+    border-radius: var(--radius-soft);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    /* Animación simple */
+    animation: fadeInScale 0.2s ease-out;
+}
+
+.custom-modal p {
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    color: var(--gris-texto);
+}
+
+.modal-actions button {
+    margin: 0 8px;
+    padding: 10px 20px;
+    min-width: 100px;
+}
+
+/* Animación de entrada */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
