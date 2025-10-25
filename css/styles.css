@@ -1,0 +1,593 @@
+/* ===============================
+   VARIABLES Y BASE
+   =============================== */
+:root {
+    --verde-principal: #2e7d32;     /* Botones, encabezados */
+    --verde-oscuro: #1b5e20;        /* Hover de botones */
+    --amarillo: #ffeb3b;            /* Destacado, línea de título */
+    --blanco: #ffffff;
+    --gris-fondo: #f5f5f5;          /* Fondo del body */
+    --gris-texto: #333;
+    --sombra: rgba(0, 0, 0, 0.1);
+    --sombra-card: rgba(0, 0, 0, 0.08); /* Sombra suave para módulos */
+    --radius-soft: 6px;             /* Radio para inputs, botones y celdas */
+    --radius-card: 12px;            /* Radio para contenedores principales */
+}
+
+* {
+    box-sizing: border-box;
+    font-family: "Poppins", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================
+   HEADER Y MENÚ SUPERIOR
+   ============================ */
+header {
+    background-color: var(--verde-principal);
+    color: var(--blanco);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 25px;
+    box-shadow: 0 2px 5px var(--sombra);
+}
+
+header .bienvenida {
+    font-size: 0.9rem;
+    color: var(--blanco);
+    opacity: 0.9;
+}
+
+/* NAV Principal de Pestañas */
+#mainTabs {
+    display: flex;
+    justify-content: flex-start; /* Alineación izquierda, el logout va solo */
+    align-items: center;
+    background-color: var(--verde-oscuro); /* Un verde más profundo para la barra */
+    padding: 0.5rem 1rem;
+    width: 100%;
+}
+
+/* Botones de Pestaña */
+#mainTabs .tabBtn {
+    background-color: #f5f5f530; /* Fondo semitransparente */
+    color: var(--blanco);
+    border: none;
+    padding: 0.6rem 1rem;
+    margin-right: 0.5rem;
+    border-radius: var(--radius-soft);
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+#mainTabs .tabBtn:hover {
+    background-color: #c8e6c9;
+    color: var(--gris-texto);
+}
+
+/* BOTÓN CERRAR SESIÓN */
+#mainTabs .logoutBtn {
+    margin-left: auto; /* Empuja el botón a la derecha */
+    background-color: #d32f2f;
+    color: var(--blanco);
+}
+
+#mainTabs .logoutBtn:hover {
+    background-color: #b71c1c;
+}
+
+/* ===============================
+   ESTRUCTURA GENERAL Y MÓDULOS
+   =============================== */
+body {
+    background-color: var(--gris-fondo);
+    color: var(--gris-texto);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    padding: 30px;
+    margin: 25px auto;
+    background-color: var(--blanco);
+    border-radius: var(--radius-card);
+    box-shadow: 0 0 15px var(--sombra);
+    width: 85%;
+    max-width: 1200px;
+}
+
+.tituloModulo {
+    font-size: 1.8rem;
+    color: var(--verde-principal);
+    border-bottom: 3px solid var(--amarillo);
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ===============================
+   BOTONES Y FORMULARIOS
+   =============================== */
+button,
+.btnPrimario,
+.btnSecundario {
+    border: none;
+    padding: 10px 18px;
+    border-radius: var(--radius-soft);
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+}
+
+.btnPrimario {
+    background-color: var(--verde-principal);
+    color: var(--blanco);
+}
+
+.btnPrimario:hover {
+    background-color: var(--verde-oscuro);
+}
+
+.btnSecundario {
+    background-color: var(--amarillo);
+    color: var(--verde-principal);
+}
+
+.btnSecundario:hover {
+    background-color: #fdd835;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: var(--radius-soft);
+    margin: 8px 0;
+    font-size: 0.95rem;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--verde-principal);
+    box-shadow: 0 0 3px rgba(46, 125, 50, 0.4);
+    outline: none;
+}
+
+/* Contenedor de Formulario */
+.formContainer {
+    margin-top: 25px;
+    background-color: #f9fff8; /* Fondo muy suavemente verde */
+    border: 1px solid #c8e6c9;
+    border-radius: var(--radius-card);
+    padding: 20px;
+    box-shadow: 0 0 8px var(--sombra);
+}
+
+/* --- INFO PAGO / Tarjeta --- */
+.infoPago {
+    background: #e8f5e9; /* Verde claro */
+    border-left: 5px solid var(--verde-principal);
+    padding: 15px;
+    border-radius: var(--radius-soft);
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+.infoPago::before {
+    content: "💳 ";
+    margin-right: 5px;
+    font-size: 1.1em;
+}
+
+/* ===============================
+   TABLAS Y ESTADOS (MIS SOLICITUDES, PAGOS, SEGUIMIENTO)
+   =============================== */
+
+   
+/* Diseño Moderno de Tabla */
+.tablaEstilo {
+    width: 100%;
+    border-collapse: separate; /* Para permitir espaciado y radio */
+    border-spacing: 0 10px;    /* Espacio entre filas */
+    margin-top: 20px;
+}
+
+.tablaEstilo th {
+    background-color: transparent; /* Fondo transparente */
+    color: var(--gris-texto);
+    font-weight: 700;
+    text-align: left;
+    padding: 8px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.tablaEstilo td {
+    background-color: var(--blanco); /* Fondo blanco para celdas */
+    padding: 12px 8px;
+    border: 1px solid #eee; /* Borde más sutil para visualmente separar */
+    border-style: none solid; /* Solo bordes laterales (evita doble borde) */
+    vertical-align: top;
+    font-size: 0.95rem;
+}
+
+/* Filas con estilo de tarjeta */
+.tablaEstilo tr td {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+.tablaEstilo tr:hover td {
+    background-color: #f9f9f9;
+}
+
+
+/* Redondear esquinas de filas (efecto tarjeta) */
+.tablaEstilo tr td:first-child {
+    border-top-left-radius: var(--radius-soft);
+    border-bottom-left-radius: var(--radius-soft);
+    border-left: 1px solid #eee; /* Asegura el borde izquierdo */
+}
+
+.tablaEstilo tr td:last-child {
+    border-top-right-radius: var(--radius-soft);
+    border-bottom-right-radius: var(--radius-soft);
+    border-right: 1px solid #eee; /* Asegura el borde derecho */
+}
+
+.tablaEstilo a {
+    color: var(--verde-principal);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.tablaEstilo a:hover {
+    color: var(--verde-oscuro);
+    text-decoration: underline;
+}
+
+/* Etiquetas de Estado */
+.status-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 15px; /* Píldora */
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-top: 3px;
+}
+
+/* Verde: Aprobado / Resuelta */
+.status-aprobado, .status-resuelta {
+    background-color: #E8F5E9; 
+    color: #388E3C;
+}
+
+/* Amarillo: Pendiente / En proceso */
+.status-pendiente, .status-en-proceso {
+    background-color: #FFFDE7; 
+    color: #FFB300;
+}
+
+
+/* ===============================
+   LOGIN Y REGISTRO (Mantener)
+   =============================== */
+.authContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--verde-principal), var(--gris-fondo));
+    padding: 20px;
+}
+
+.authBox {
+    background-color: var(--blanco);
+    padding: 40px 35px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px var(--sombra);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+.authBox h2 {
+    color: var(--verde-principal);
+    border-bottom: 3px solid var(--amarillo);
+    display: inline-block;
+}
+.authBox button {
+    background-color: var(--verde-principal);
+}
+.authBox button:hover {
+    background-color: var(--verde-oscuro);
+}
+
+
+/* ================================================= */
+/* ESTILOS ARMÓNICOS PARA MENSAJES/CALENDARIO DINÁMICO */
+/* ================================================= */
+
+/* Contenedor de Mensajes */
+.mensajes-wrap { 
+    display:grid; 
+    grid-template-columns: 1fr; 
+    gap:18px; 
+    padding:12px; 
+}
+@media(min-width:900px){ 
+    .mensajes-wrap { grid-template-columns: 1fr 1fr; } 
+}
+
+/* Tarjeta Base (usada en mensajes) */
+.card {
+    background: var(--blanco);
+    border-radius: var(--radius-soft); 
+    box-shadow: 0 2px 8px var(--sombra-card);
+    overflow: hidden;
+}
+.card header {
+    /* Color de la tarjeta de mensaje armonizado */
+    background-color: var(--verde-principal); 
+    color: var(--blanco);
+    font-weight: 600;
+    padding: 10px 14px;
+    border-top-left-radius: var(--radius-soft);
+    border-top-right-radius: var(--radius-soft);
+    border-bottom: 2px solid var(--verde-oscuro);
+}
+.card header h2 { 
+    margin:0 0 0 0; 
+    font-size:1.1rem; 
+    color: var(--blanco); /* Color del título dentro del header */
+}
+
+/* Estilo de Anuncios */
+.anuncio { 
+    border-left:4px solid var(--amarillo); /* Borde amarillo */
+    padding:10px; 
+    margin-bottom:10px; 
+    border-radius:var(--radius-soft); 
+    background:linear-gradient(180deg, #fffcf0, #fffcf5); /* Fondo muy claro basado en amarillo */
+}
+.anuncio h3 { 
+    margin:0 0 6px 0; 
+    font-size:1rem; 
+    color: var(--gris-texto); 
+}
+.anuncio p { 
+    margin:0 0 6px 0; 
+    color: var(--gris-texto); 
+}
+.anuncio small.fecha { 
+    color: var(--gris-texto); 
+    opacity: 0.7;
+}
+
+/* Botones genéricos de módulos (Armonizados) */
+.acciones { margin-top:8px; display:flex; gap:6px; }
+.acciones .btn { font-size:0.85rem; padding:6px 8px; }
+
+/* Botón sólido (usado en modales/acciones) */
+.btn { 
+    background:var(--verde-principal); 
+    color:white; 
+    padding:8px 12px; 
+    border-radius:var(--radius-soft); 
+    border:none; 
+    cursor:pointer; 
+    transition: background-color 0.2s;
+}
+.btn:hover {
+    background: var(--verde-oscuro);
+}
+
+/* Botón Fantasma/Ghost (Armonizado) */
+.btn.ghost { 
+    background:transparent; 
+    color:var(--gris-texto); 
+    border:1px solid #ddd; 
+}
+.btn.ghost:hover {
+    background: #f0f0f0;
+}
+.btn.small { 
+    padding:6px 8px; 
+    font-size:0.85rem; 
+    border-radius:var(--radius-soft); 
+}
+
+/* --- CALENDARIO (Mantenemos el Grid) --- */
+.grid-calendario { 
+    display:grid; 
+    grid-template-columns: repeat(7, 1fr); 
+    gap:8px; 
+}
+.celda { 
+    min-height:80px; 
+    padding:8px; 
+    border-radius:var(--radius-soft); 
+    border:1px dashed #c8e6c9; /* Borde verde claro */
+    background:#fff; 
+    position:relative; 
+}
+.celda .num { 
+    font-weight:700; 
+    color:var(--gris-texto); 
+    margin-bottom:6px; 
+}
+.celda.ocupado { 
+    background: linear-gradient(180deg,#fff7ed,#fffaf6); /* Fondo suave en amarillo/naranja */
+    border-color:#fed7aa; 
+}
+.act-titulo { 
+    font-size:0.9rem; 
+    color:#9a3412; 
+    margin-top:6px; 
+}
+
+/* --- FORO/MENSAJES INTERNOS --- */
+.foro-mensajes { 
+    max-height:320px; 
+    overflow-y:auto; 
+    display:flex; 
+    flex-direction:column; 
+    gap:10px; 
+    padding-top:6px; 
+}
+/* Item de mensaje armonizado */
+.foro-item { 
+    padding:10px; 
+    border-radius:var(--radius-soft); 
+    background:linear-gradient(180deg,#f9fff8,#f7fff7); /* Fondo muy suave en verde */
+    border:1px solid #c8e6c9; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+.foro-item strong { 
+    display:block; 
+    color:var(--verde-oscuro); 
+    margin-bottom:4px; 
+    font-size: 0.95rem;
+}
+.foro-item p { 
+    margin:0 0 6px 0; 
+    color:var(--gris-texto); 
+}
+.foro-item small { 
+    color:var(--gris-texto); 
+    opacity: 0.7;
+    font-size: 0.85rem;
+}
+
+.solo-lectura { color:#64748b; font-style:italic; }
+
+
+/* --- RESPONSIVO (Se mantienen) --- */
+@media (max-width: 768px) {
+    #mainTabs {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    #mainTabs .tabBtn {
+        margin: 0.3rem;
+    }
+}
+
+@media (max-width:600px){
+    .grid-calendario { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 500px) {
+    .authBox {
+        padding: 30px 20px;
+    }
+}
+
+/* ===============================
+   AJUSTES CSS ADICIONALES PARA PERFIL
+   =============================== */
+
+/* Agrupa etiqueta y campo para mejor control */
+.input-group {
+    margin-bottom: 15px;
+}
+.input-group label {
+    display: block; /* Asegura que la etiqueta esté en su propia línea */
+    font-weight: 600;
+    color: var(--gris-texto);
+    margin-bottom: 5px;
+}
+
+/* Para el formulario simple de Mi Perfil (solo mostrar datos) */
+.form-perfil-display input[disabled] {
+    /* Fondo que indica que el campo no es editable */
+    background-color: #eee; 
+    color: #666;
+    cursor: default;
+}
+
+/* Botones pequeños para la tabla de Admin */
+.btn-small {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    margin-left: 5px; /* Pequeño margen entre botones */
+}
+
+/* Contenedor de botones para formularios */
+.form-actions {
+    display: flex;
+    gap: 10px; /* Espacio entre botones */
+    justify-content: flex-end; /* Botones a la derecha por defecto */
+}
+
+/* ===============================
+   AJUSTE CRÍTICO PARA TABLAS DE ADMINISTRADOR
+   =============================== */
+
+/* 1. CLASE PRINCIPAL: Fuerza el diseño de tabla fijo y quita el espaciado entre celdas */
+.tabla-admin-simple {
+    border-spacing: 0 0px !important; 
+    border-collapse: collapse !important; 
+    width: 100%;
+    table-layout: fixed; /* <<-- CLAVE: Fuerzas a la tabla a respetar los anchos definidos */
+    margin-top: 20px;
+}
+
+/* 2. ESTILO DE CELDAS: Quita los estilos de "tarjeta" que generan el espacio */
+.tabla-admin-simple th,
+.tabla-admin-simple td {
+    background-color: var(--blanco) !important; 
+    box-shadow: none !important; /* Elimina la sombra que simula una tarjeta */
+    border: 1px solid #e0e0e0 !important; /* Borde simple para separar celdas */
+    border-radius: 0 !important; /* Quita el redondeo de esquinas */
+    padding: 8px 10px !important; 
+    text-align: left !important;
+    vertical-align: middle !important; /* Alinea el contenido de la celda al tope */
+    font-size: 0.9rem;
+    line-height: 1.2;
+    overflow: hidden; /* Evita que el contenido muy largo desborde */
+}
+
+/* 3. ENCABEZADOS: Asegura que el borde superior sea el de tu diseño */
+.tabla-admin-simple th {
+    background-color: var(--gris-fondo) !important; 
+    border-top: 2px solid var(--verde-principal) !important; 
+    border-bottom: 2px solid var(--verde-principal) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 0.85rem !important;
+    color: var(--gris-texto) !important;
+}
+
+
+/* 4. ACCIONES: Contenedor flexible para los botones */
+.acciones-admin-wrap {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los botones salten de línea si el espacio es muy reducido */
+    gap: 4px; 
+    margin-top: 5px;
+    align-items: center;
+}
+
+/* 5. INPUT FILE: Ajusta el input dentro de la celda de acciones */
+.tabla-admin-simple input[type="file"] {
+    width: 100%; 
+    padding: 6px 8px; 
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    font-size: 0.85rem;
+    box-shadow: none;
+    background-color: var(--gris-fondo);
+}
