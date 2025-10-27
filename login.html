@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Iniciar Sesión</title>
-  <link rel="stylesheet" href="./css/styles.css" />
+  <meta charset="UTF-8" />
+  <title>Iniciar Sesión</title>
+  <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
-  <div class="authContainer">
-    <div class="authBox">
-      <h2>Acceso al Sistema</h2>
+  <div class="authContainer">
+    <div class="authBox">
+      <h2>Acceso al Sistema</h2>
 
-      <form id="loginForm">
-        <input type="email" id="email" placeholder="Correo electrónico" required />
-        <input type="password" id="password" placeholder="Contraseña" required />
-        <button type="submit">Iniciar Sesión</button>
-      </form>
+      <form id="loginForm">
+        <input type="email" id="email" placeholder="Correo electrónico" required />
+        <input type="password" id="password" placeholder="Contraseña" required />
+        <button type="submit" class="btn btn-principal">Iniciar Sesión</button>
+      </form>
 
-      <p class="link">
-        ¿No tienes cuenta? <a href="./registro.html">Regístrate aquí</a>
-      </p>
-    </div>
-  </div>
+      <p class="link">
+        ¿No tienes cuenta? <a href="./registro.html">Regístrate aquí</a>
+      </p>
+    </div>
+  </div>
 
-  <script type="module">
-    import { login } from "./js/auth.js";
+  <script type="module">
+    import { login } from "./js/auth.js";
+    import { mostrarMensaje } from "./js/utils.js"; // ⬅️ Importación necesaria para el funcionamiento de auth.js
 
-    document.getElementById("loginForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      login(email, password);
-    });
-  </script>
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      login(email, password);
+    });
+  </script>
 </body>
 </html>

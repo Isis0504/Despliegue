@@ -1,73 +1,70 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Registro de Usuario</title>
-  <link rel="stylesheet" href="./css/styles.css" />
+    <meta charset="UTF-8" />
+    <title>Registro de Usuario</title>
+    <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
-  <div class="authContainer">
-    <div class="authBox">
-      <h2>Registro de Nuevo Usuario</h2>
+    <div class="authContainer">
+        <div class="authBox">
+            <h2>Registro de Nuevo Usuario</h2>
 
-      <form id="registroForm">
-        <input type="text" id="nombre" placeholder="Nombre completo" required />
-        <input type="email" id="email" placeholder="Correo electrónico" required />
-        <input type="password" id="password" placeholder="Contraseña" required />
-        <input type="text" id="telefono" placeholder="Teléfono (opcional)" />
-        <button type="submit">Registrarme</button>
-      </form>
+            <form id="registroForm">
+                <input type="text" id="nombre" placeholder="Nombre completo" required />
+                <input type="email" id="email" placeholder="Correo electrónico" required />
+                <input type="password" id="password" placeholder="Contraseña" required />
+                <input type="text" id="telefono" placeholder="Teléfono (opcional)" />
+                <button type="submit" class="btn btn-principal">Registrarme</button>
+            </form>
 
-      <p class="link">
-        ¿Ya tienes cuenta? <a href="./login.html">Inicia sesión</a>
-      </p>
-    </div>
-  </div>
+            <p class="link">
+                ¿Ya tienes cuenta? <a href="./login.html">Inicia sesión</a>
+            </p>
+        </div>
+    </div>
 
-  <script type="module">
-    import { supabase } from "./js/supabaseClient.js";
+    <script type="module">
+        import { supabase } from "./js/supabaseClient.js";
+        import { mostrarMensaje } from "./js/utils.js"; // ⬅️ Importamos la utilidad
 
-    const form = document.getElementById("registroForm");
+        const form = document.getElementById("registroForm");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
 
-      const nombre = document.getElementById("nombre").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const telefono = document.getElementById("telefono").value.trim();
+            const nombre = document.getElementById("nombre").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const telefono = document.getElementById("telefono").value.trim();
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+            // 1. Llamada a signUp
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        nombre: nombre,
+                        telefono: telefono,
+                    },
+                },
+            });
 
-      if (error || !data.user) {
-        alert("Error al registrar usuario: " + (error?.message || "Desconocido"));
-        console.error(error);
-        return;
-      }
+            if (error || !data.user) {
+                // 🛑 Reemplazo de alert por mostrarMensaje (tipo: error)
+                mostrarMensaje("Error al registrar usuario: " + (error?.message || "Desconocido"), "error");
+                console.error(error);
+                return;
+            }
 
-      const { error: insertError } = await supabase.from("usuarios").insert([
-        {
-          id: data.user.id,
-          nombre,
-          correo: email,
-          telefono,
-          rol: "residente",
-          estado: "pendiente",
-        },
-      ]);
-
-      if (insertError) {
-        alert("Error al guardar datos del usuario: " + insertError.message);
-        console.error(insertError);
-        return;
-      }
-
-      alert("Registro completado. Tu cuenta está pendiente de aprobación por el administrador.");
-      window.location.href = "./login.html";
-    });
-  </script>
+            // 🛑 Reemplazo de alert por mostrarMensaje (tipo: success)
+            mostrarMensaje("Registro completado. Tu cuenta está pendiente de aprobación por el administrador. ¡Revisa tu correo para verificar la cuenta!", "success");
+            
+            // Retrasar la redirección ligeramente (ej: 1.5s) para que el usuario vea el mensaje
+            setTimeout(() => {
+                window.location.href = "./login.html";
+            }, 1500);
+        });
+    </script>
 </body>
 </html>
