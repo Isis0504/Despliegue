@@ -1,46 +1,148 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Inicio - Sistema de Gestión</title>
-  <link rel="stylesheet" href="./css/styles.css">
+    <meta charset="UTF-8">
+    <title>Inicio - Sistema de Gestión</title>
+    <style>
+        /* ===============================
+           VARIABLES (Necesarias para el estilo)
+           =============================== */
+        :root {
+            --verde-principal: #2e7d32;
+            --verde-oscuro: #1b5e20;
+            --amarillo: #ffeb3b;
+            --blanco: #ffffff;
+            --gris-fondo: #f5f5f5;
+            --gris-texto: #333;
+            --sombra: rgba(0, 0, 0, 0.1);
+            --radius-soft: 6px;
+            --radius-card: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: "Poppins", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ===============================
+           ESTILOS DE ACCESO (Tomados de .authContainer y .authBox)
+           =============================== */
+        .authContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            /* Fondo degradado verde/gris */
+            background: linear-gradient(135deg, var(--verde-principal), var(--gris-fondo));
+            padding: 20px;
+        }
+
+        .authBox {
+            background-color: var(--blanco);
+            padding: 40px 35px;
+            border-radius: var(--radius-card); /* 12px */
+            box-shadow: 0 4px 15px var(--sombra);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .authBox .logo {
+            margin-bottom: 25px;
+            max-width: 120px;
+            height: auto;
+        }
+
+        .authBox h2 {
+            font-size: 1.8rem;
+            color: var(--verde-principal);
+            border-bottom: 3px solid var(--amarillo);
+            display: inline-block;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .authBox p {
+            color: var(--gris-texto);
+            margin-bottom: 25px;
+        }
+
+        /* Estilos de Botón Primario para el Enlace */
+        .btnPrimario {
+            display: block;
+            border: none;
+            padding: 10px 18px;
+            border-radius: var(--radius-soft);
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            text-decoration: none; /* Quitar subrayado al enlace */
+            text-align: center;
+
+            background-color: var(--verde-principal);
+            color: var(--blanco);
+        }
+
+        .btnPrimario:hover {
+            background-color: var(--verde-oscuro);
+        }
+
+        /* Estilo del enlace de registro */
+        .link {
+            margin-top: 15px;
+            font-size: 0.95rem;
+        }
+        .link a {
+            color: var(--verde-principal);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s, text-decoration 0.2s;
+        }
+        .link a:hover {
+            color: var(--verde-oscuro);
+            text-decoration: underline;
+        }
+    </style>
 </head>
-<body>
-  <header>
-    <h1>Sistema de Gestión de Conjunto</h1>
-  </header>
+<body class="authContainer"> 
+    
+    <main class="authBox"> 
+        <img src="logo.png" alt="Logo del Conjunto" class="logo">
+        
+        <h2>Acceso al Sistema</h2>
+        <p>Por favor, inicia sesión o regístrate para continuar.</p>
+        
+        <a href="login.html" class="btnPrimario">
+            INICIAR SESIÓN
+        </a>
+        
+        <div class="link">
+            ¿No tienes cuenta? <a href="registro.html">Regístrate aquí</a>
+        </div>
+    </main>
 
-  <main>
-    <h2>Bienvenido</h2>
-    <p>Por favor, inicia sesión o regístrate para continuar.</p>
-    <a href="login.html">Iniciar Sesión</a> |
-    <a href="registro.html">Registrarse</a>
-  </main>
-
-  <!-- Variables de entorno que Netlify reemplazará -->
-  <script>
-    window.ENV = {
-      SUPABASE_URL: "{{SUPABASE_URL}}",
-      SUPABASE_ANON_KEY: "{{SUPABASE_ANON_KEY}}"
-    };
-  </script>
-
-  <!-- Script de redirección según rol -->
-  <script type="module">
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    if (usuario) {
-      switch (usuario.rol) {
-        case "administrador":
-          window.location.href = "./admin/dashboard.html";
-          break;
-        case "comite":
-          window.location.href = "./comite/dashboard.html";
-          break;
-        case "residente":
-          window.location.href = "./residente/dashboard.html";
-          break;
-      }
-    }
-  </script>
+    <script type="module">
+        // Este script revisa si ya hay un usuario logueado y lo redirige.
+        const usuario = JSON.parse(localStorage.getItem("usuario"));
+        if (usuario) {
+            switch (usuario.rol) {
+                case "administrador":
+                    window.location.href = "./admin/dashboard.html";
+                    break;
+                case "comite":
+                    window.location.href = "./comite/dashboard.html";
+                    break;
+                case "residente":
+                    window.location.href = "./residente/dashboard.html";
+                    break;
+            }
+        }
+    </script>
 </body>
 </html>
