@@ -25,20 +25,31 @@ export async function render(contenedor) {
       </div>
     `
       : `
-      <div class="filtrosAdmin" style="margin-bottom:15px;">
-        <input type="text" id="filtroNombre" placeholder="Buscar por nombre..." class="inputFiltro" />
-        <select id="filtroEstado" class="inputFiltro">
-          <option value="">Todos los estados</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="aprobado">Aprobado</option>
-          <option value="rechazado">Rechazado</option>
-        </select>
-      </div>
+      
+      <div class="filtrosAdmin" style="margin-bottom:15px; display: flex; gap:10px; flex-wrap: wrap;">
+  <input type="text" id="filtroNombre" placeholder="Buscar por nombre..." class="inputFiltro" />
+  <select id="filtroEstado" class="inputFiltro">
+    <option value="">Todos los estados</option>
+    <option value="pendiente">Pendiente</option>
+    <option value="aprobado">Aprobado</option>
+    <option value="rechazado">Rechazado</option>
+  </select>
+  <input type="month" id="filtroMes" class="inputFiltro" />
+</div>
     `
   }
   <div id="contenedorPagos" class="tablaPagos"></div>
   <div id="formPagoContainer" class="formContainer hidden"></div>
 `;
+
+  // Inicializar filtros
+  if (usuario.rol === "administrador") {
+    const mesInput = document.getElementById("filtroMes");
+
+    [mesInput].forEach(input => {
+      input.addEventListener("input", () => cargarPagos());
+    });
+  }
 
   // Cargar pagos iniciales
   await cargarPagos();
@@ -62,19 +73,24 @@ export async function render(contenedor) {
  * Función principal de carga
  * ───────────────────────────────*/
 async function cargarPagos() {
-  const pagosDiv = document.getElementById("contenedorPagos");
-  pagosDiv.innerHTML = "<p>Cargando pagos...</p>";
+  const pagosDiv = document.getElementById("contenedorPagos");
+  pagosDiv.innerHTML = "<p>Cargando pagos...</p>";
 
-  let query = supabase.from("pagos").select(`
-    id, monto, fecha_pago, descripcion, soporte_url, estado, mes_correspondiente, usuario_id,
-    usuarios (id, nombre, correo)
-  `);
+  let query = supabase.from("pagos").select(`
+    id, monto, fecha_pago, descripcion, soporte_url, estado, mes_correspondiente, usuario_id,
+    usuarios (id, nombre, correo, casa_numero)
+  `);
 
   if (usuario.rol !== "administrador") {
     query = query.eq("usuario_id", usuario.id);
   } else {
     const filtroNombre = document.getElementById("filtroNombre")?.value?.toLowerCase() || "";
     const filtroEstado = document.getElementById("filtroEstado")?.value || "";
+    const filtroMes = document.getElementById("filtroMes")?.value || "";
+
+    if (filtroMes) {
+      query = query.eq("mes_correspondiente", filtroMes);
+    }
 
     if (filtroEstado) {
       query = query.eq("estado", filtroEstado);
@@ -127,12 +143,12 @@ function renderTabla(pagosDiv, pagos) {
   }
 
   let tablaHTML = `
-    <table class="tablaEstilo">
-      <thead>
-        <tr>
-          ${usuario.rol === "administrador" ? "<th>Usuario</th>" : ""}
-          <th>Fecha</th>
-          <th>Mes</th>
+    <table class="tablaEstilo">
+      <thead>
+        <tr>
+          ${usuario.rol === "administrador" ? "<th>Casa</th><th>Usuario</th>" : ""}
+          <th>Fecha</th>
+          <th>Mes</th>
           <th>Monto</th>
           <th>Descripción</th>
           <th>Soporte</th>
@@ -146,9 +162,13 @@ function renderTabla(pagosDiv, pagos) {
   pagos.forEach((pago) => {
     tablaHTML += `
       <tr>
-        ${usuario.rol === "administrador" ? `<td>${pago.usuarios?.nombre || "—"}</td>` : ""}
-        <td>${pago.fecha_pago}</td>
-        <td>${pago.mes_correspondiente || "—"}</td>
+        ${
+          usuario.rol === "administrador" 
+             ? `<td>${pago.usuarios?.casa_numero || "—"}</td><td>${pago.usuarios?.nombre || "—"}</td>`
+            : ""
+        }
+        <td>${pago.fecha_pago}</td>
+        <td>${pago.mes_correspondiente || "—"}</td>
         <td>$${Number(pago.monto).toLocaleString()}</td>
         <td>${pago.descripcion || "—"}</td>
         <td>${pago.soporte_url ? `<a href="${pago.soporte_url}" target="_blank">Ver</a>` : "—"}</td>
@@ -214,7 +234,7 @@ function mostrarFormularioPago() {
     <h3>Registrar nuevo pago</h3>
     <form id="formPago" class="formPago">
       <label>Monto:</label>
-      <input type="number" id="monto" required placeholder="Ej: 150000" />
+      <input type="number" id="monto" required placeholder="Ingresa el monto de tu consignacion" />
 
       <label>Fecha de pago:</label>
       <input type="date" id="fecha_pago" required />

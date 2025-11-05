@@ -1,7 +1,7 @@
-import { verificarSesion } from "../js/auth.js";
+import { verificarSesion, logout } from "../js/auth.js";
 import { cargarModulo } from "../js/utils.js";
 
-verificarSesion(["comite", "administrador"]);
+verificarSesion(["comite"]);
 
 const usuario = JSON.parse(localStorage.getItem("usuario"));
 document.getElementById("nombreUsuario").textContent = usuario?.nombre || "Comité";
@@ -19,6 +19,18 @@ const botones = [
   { id: "logout", nombre: "Cerrar Sesión" },
 ];
 
+const pantallaInicio = document.getElementById("pantallaInicio");
+pantallaInicio.innerHTML = `
+  <div class="bienvenidaContainer">
+    <img src="../logo.png" alt="Logo del conjunto" class="logoBienvenida" />
+    <h2>Panel del Comité</h2>
+    <p><strong>${usuario?.nombre || "Miembro del Comité"}</strong>, gracias por apoyar la gestión del conjunto.</p>
+    <p style="margin-top: 10px; font-size:0.95rem;">
+      A quí podrás gestionar tus pagos, reservas, certificados y más. Como miembro del comité, puedes revisar solicitudes y colaborar por el bienestar del conjunto sin extralimitar tus funciones. ¡Gracias por tu compromiso! 🙌
+    </p>
+  </div>
+`;
+
 mainTabs.innerHTML = botones
   .map((b) => {
     const extraClass = b.id === "logout" ? "logoutBtn" : "";
@@ -30,9 +42,20 @@ document.querySelectorAll(".tabBtn").forEach((btn) => {
   btn.addEventListener("click", async () => {
     const id = btn.dataset.id;
 
+    if (id !== "logout") {
+      // Ocultar pantalla de inicio
+      pantallaInicio.classList.add("hidden");
+    }
+  });
+});
+
+// 2. Lógica de clics
+   document.querySelectorAll(".tabBtn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const id = btn.dataset.id;
+
     if (id === "logout") {
-      localStorage.removeItem("usuario");
-      window.location.href = "../login.html";
+      logout();
       return;
     }
 

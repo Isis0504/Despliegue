@@ -74,6 +74,7 @@ async function renderAdmin(contenedor) {
             <table class="tablaEstilo"> <thead>
                     <tr>
                         <th>Nombre</th>
+                        <th>Casa</th>
                         <th>Correo</th>
                         <th>Rol</th>
                         <th>Teléfono</th>
@@ -86,6 +87,7 @@ async function renderAdmin(contenedor) {
                     ${usuarios.map(u => `
                         <tr data-id="${u.id}">
                             <td>${escapeHtml(u.nombre)}</td>
+                            <td>${escapeHtml(u.casa_numero || "—")}</td>
                             <td>${escapeHtml(u.correo || "")}</td>
                             <td>${escapeHtml(u.rol)}</td>
                             <td>${escapeHtml(u.telefono || "")}</td>
@@ -171,6 +173,9 @@ async function abrirEditorAdmin(contenedor, id) {
         <label>Teléfono</label>
         <input id="e-telefono" value="${escapeHtml(usuario.telefono || "")}">
 
+        <label>Casa / Apto</label>
+        <input type="text" id="editCasaNumero" value="${escapeHtml(usuario.casa_numero || "")}" placeholder="Ej: A12" />
+
         <label>Rol</label>
         <select id="e-rol">
           <option value="residente" ${usuario.rol === "residente" ? "selected" : ""}>Residente</option>
@@ -195,12 +200,16 @@ async function abrirEditorAdmin(contenedor, id) {
 
   document.getElementById("voler-lista").addEventListener("click", () => render(contenedor));
   document.getElementById("form-editar-admin").addEventListener("submit", async (e) => {
+  document.getElementById("editCasaNumero").value = usuario.casa_numero || "";
+
     e.preventDefault();
     const nombre = document.getElementById("e-nombre").value.trim();
+    const casa_numero = document.getElementById("editCasaNumero").value.trim();
     const correo = document.getElementById("e-correo").value.trim();
     const telefono = document.getElementById("e-telefono").value.trim();
     const rol = document.getElementById("e-rol").value;
     const estado = document.getElementById("e-estado").value;
+    
 
     const { error } = await supabase.from("usuarios").update({ nombre, correo, telefono, rol, estado }).eq("id", id);
     if (error) {
@@ -238,6 +247,11 @@ async function renderResidenteComite(contenedor, perfil) {
                     <label>Teléfono</label>
                     <input id="m-telefono" value="${escapeHtml(perfil.telefono || "")}" placeholder="Tu número">
                 </div>
+
+                <div class="input-group">
+                    <label>Casa / Apto</label>
+                    <input value="${escapeHtml(perfil.casa_numero || "N/A")}" disabled>
+                </div>
 
                 <div class="input-group">
                     <label>Rol</label>

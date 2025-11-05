@@ -43,7 +43,7 @@ export async function render(contenedor) {
 
   // APLICACIÓN DE ESTILO: Clase al título principal
   contenedor.innerHTML = `
-    <h2 class="tituloModulo">📜 Certificados</h2>
+    <h2 class="tituloModulo">Certificados</h2>
     <div id="certificados-contenido"></div>
   `;
 
@@ -109,51 +109,55 @@ async function renderUsuario(contenedor, usuario_id) {
 /* =======================================================
    🔹 Vista Administrador
    ======================================================= */
-async function renderAdmin(contenedor) {
+export function renderAdmin(contenedor) {
+  contenedor.innerHTML = `
+    <h2 class="tituloModulo">Gestión de Certificados</h2>
 
-  const div = contenedor.querySelector("#certificados-contenido");
-
-  div.innerHTML = `
-
-    <h3>📋 Solicitudes de Certificados</h3>
-
-    <table border="1" cellspacing="0" cellpadding="5" width="100%">
-
+    <div class="formContainer" style="margin-bottom: 20px;">
+      <div class="input-group">
+        <label for="filtroNombreCert">Buscar por nombre</label>
+        <input type="text" id="filtroNombreCert" placeholder="Escribe un nombre...">
+      </div>
+      <div class="input-group">
+        <label for="filtroTipoCert">Filtrar por tipo</label>
+        <select id="filtroTipoCert">
+          <option value="">Todos los tipos</option>
+          <option value="residencia">Residencia</option>
+          <option value="autorizacion">Autorización</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="filtroEstadoCert">Filtrar por estado</label>
+        <select id="filtroEstadoCert">
+          <option value="">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="aprobado">Aprobado</option>
+          <option value="rechazado">Rechazado</option>
+        </select>
+      </div>
+    </div>
+    
+    <table class="tablaEstilo">
       <thead>
-
         <tr>
-
-          <th>Usuario</th>
-
+          <th>Casa y residente</th>
           <th>Tipo</th>
-
           <th>Comentario</th>
-
           <th>Estado</th>
-
           <th>Archivo</th>
-
           <th>Acciones</th>
-
+          <th></th>
         </tr>
-
       </thead>
-
-      <tbody id="tabla-admin-certificados"></tbody>
-
+      <tbody id="tbodyCertificadosAdmin">
+        <tr><td colspan="7">Cargando solicitudes...</td></tr>
+      </tbody>
     </table>
-
   `;
 
-  await cargarSolicitudesAdmin();
-
+  activarFiltrosCertificados();
+  cargarSolicitudesAdmin();
 }
-
-
-
-/*
-
-
 
 /* =======================================================
    🔸 Funciones para Residente / Comité
@@ -259,77 +263,67 @@ async function cargarSolicitudesUsuario(usuario_id) {
   });
 }
 
-
 /* =======================================================
    🔸 Funciones para Administrador
    ======================================================= */
+
+function activarFiltrosCertificados() {
+  const inputs = ["filtroNombreCert", "filtroTipoCert", "filtroEstadoCert"];
+  inputs.forEach(id => {
+    document.getElementById(id)?.addEventListener("input", cargarSolicitudesAdmin);
+    document.getElementById(id)?.addEventListener("change", cargarSolicitudesAdmin);
+  });
+}
+
 async function cargarSolicitudesAdmin() {
+  // Obtener valores de filtros
+  const filtroNombre = document.getElementById("filtroNombreCert")?.value?.toLowerCase() || "";
+  const filtroTipo = document.getElementById("filtroTipoCert")?.value || "";
+  const filtroEstado = document.getElementById("filtroEstadoCert")?.value || "";
 
+  // Buscar registros con relación a usuarios
   const { data, error } = await supabase
-
     .from("solicitudes_certificados")
-
-    .select("*, usuarios(nombre)")
-
+    .select("*, usuarios(nombre, casa_numero)")
     .order("fecha_solicitud", { ascending: false });
-
-
 
   if (error) return console.error(error);
 
-
-
-  const tabla = document.getElementById("tabla-admin-certificados");
-
-  tabla.innerHTML = "";
-
-
-
-  data.forEach((item) => {
-
-    const fila = document.createElement("tr");
-
-
-
-    fila.innerHTML = `
-
-      <td>${item.usuarios?.nombre || "—"}</td>
-
-      <td>${item.tipo}</td>
-
-      <td>${item.comentario || "—"}</td>
-
-      <td>${item.estado}</td>
-
-      <td>
-
-        ${item.archivo_url ? `<a href="${item.archivo_url}" target="_blank">📄 Ver</a>` : "—"}
-
-      </td>
-
-      <td>
-
-        <input type="file" id="file-${item.id}" style="margin-bottom:4px;"><br>
-
-        <button onclick="aprobarCertificado('${item.id}')">✅ Aprobar</button>
-
-        <button onclick="rechazarCertificado('${item.id}')">❌ Rechazar</button>
-
-        <button onclick="subirCertificadoPDF('${item.id}')">⬆️ Subir PDF</button>
-
-      </td>
-
-    `;
-
-
-
-    tabla.appendChild(fila);
-
+  // Filtrar en cliente
+  const resultadosFiltrados = data.filter(item => {
+    const coincideNombre = item.usuarios?.nombre?.toLowerCase().includes(filtroNombre);
+    const coincideTipo = filtroTipo ? item.tipo === filtroTipo : true;
+    const coincideEstado = filtroEstado ? item.estado === filtroEstado : true;
+    return coincideNombre && coincideTipo && coincideEstado;
   });
 
+  // Renderizar tabla
+  const tabla = document.getElementById("tbodyCertificadosAdmin");
+  tabla.innerHTML = "";
+
+  if (resultadosFiltrados.length === 0) {
+    tabla.innerHTML = `<tr><td colspan="7">No se encontraron resultados.</td></tr>`;
+    return;
+  }
+
+  resultadosFiltrados.forEach((item) => {
+    const fila = document.createElement("tr");
+    fila.innerHTML = `
+      <td>${item.usuarios?.casa_numero || "—"} - ${item.usuarios?.nombre || "—"}</td>
+      <td>${item.tipo}</td>
+      <td>${item.comentario || "—"}</td>
+      <td>${item.estado}</td>
+      <td>${item.archivo_url ? `<a href="${item.archivo_url}" target="_blank">📄 Ver</a>` : "—"}</td>
+      <td>
+        <input type="file" id="file-${item.id}" style="margin-bottom:4px;"><br>
+        <button onclick="aprobarCertificado('${item.id}')">✅ Aprobar</button>
+        <button onclick="rechazarCertificado('${item.id}')">❌ Rechazar</button>
+        <button onclick="subirCertificadoPDF('${item.id}')">⬆️ Subir PDF</button>
+      </td>
+    `;
+    tabla.appendChild(fila);
+  });
 }
-
-
 
 /*
 

@@ -1,70 +1,88 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <title>Registro de Usuario</title>
-    <link rel="stylesheet" href="./css/styles.css" />
+    <meta charset="UTF-8" />
+    <title>Registro de Usuario</title>
+    <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
-    <div class="authContainer">
-        <div class="authBox">
-            <h2>Registro de Nuevo Usuario</h2>
+    <div class="authContainer">
+        <div class="authBox">
+            <h2>Registro de Nuevo Usuario</h2>
 
-            <form id="registroForm">
-                <input type="text" id="nombre" placeholder="Nombre completo" required />
-                <input type="email" id="email" placeholder="Correo electrónico" required />
-                <input type="password" id="password" placeholder="Contraseña" required />
-                <input type="text" id="telefono" placeholder="Teléfono (opcional)" />
-                <button type="submit" class="btn btn-principal">Registrarme</button>
-            </form>
+            <form id="registroForm">
+                <input type="text" id="nombre" placeholder="Nombre completo" required />
+                <input type="email" id="email" placeholder="Correo electrónico" required />
+                <input type="password" id="password" placeholder="Contraseña" required />
+                <input type="text" id="casaNumero" placeholder="Número de Casa/Apto (ej: 4-304)" required />
+                <input type="tel" id="telefono" placeholder="Teléfono (opcional)" />
+                <button type="submit" class="btn btn-principal">Registrarme</button>
+            </form>
 
-            <p class="link">
-                ¿Ya tienes cuenta? <a href="./login.html">Inicia sesión</a>
-            </p>
-        </div>
-    </div>
+            <p class="link">
+                ¿Ya tienes cuenta? <a href="./login.html">Inicia sesión</a>
+            </p>
+        </div>
+    </div>
 
-    <script type="module">
-        import { supabase } from "./js/supabaseClient.js";
-        import { mostrarMensaje } from "./js/utils.js"; // ⬅️ Importamos la utilidad
+    <script type="module">
+    import { supabase } from "./js/supabaseClient.js";
+    import { mostrarMensaje } from "./js/utils.js";
 
-        const form = document.getElementById("registroForm");
+    const form = document.getElementById("registroForm");
 
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-            const nombre = document.getElementById("nombre").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value.trim();
-            const telefono = document.getElementById("telefono").value.trim();
+        const nombre = document.getElementById("nombre").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const casaNumero = document.getElementById("casaNumero").value.trim();
+        const telefono = document.getElementById("telefono").value.trim();
 
-            // 1. Llamada a signUp
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        nombre: nombre,
-                        telefono: telefono,
-                    },
-                },
-            });
+        // Validaciones
+        if (telefono && !/^\+?[\d\s-()]*$/.test(telefono)) {
+            mostrarMensaje("El teléfono solo debe contener números, espacios, guiones o paréntesis.", "error");
+            return;
+        }
+        if (!casaNumero) {
+            mostrarMensaje("El número de casa/apto es obligatorio.", "error");
+            return;
+        }
 
-            if (error || !data.user) {
-                // 🛑 Reemplazo de alert por mostrarMensaje (tipo: error)
-                mostrarMensaje("Error al registrar usuario: " + (error?.message || "Desconocido"), "error");
-                console.error(error);
-                return;
-            }
+        // 1. Llamada a signUp
+        // ⭐ VOLVEMOS A USAR 'data' EN OPTIONS
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    nombre: nombre,
+                    // ✅ Enviamos el dato al metadata del usuario de Auth
+                    casa_numero: casaNumero, 
+                    telefono: telefono,
+                    rol: "residente",      // Definir el rol inicial aquí
+                    estado: "pendiente",  // Definir el estado inicial aquí
+                },
+            },
+        });
 
-            // 🛑 Reemplazo de alert por mostrarMensaje (tipo: success)
-            mostrarMensaje("Registro completado. Tu cuenta está pendiente de aprobación por el administrador. ¡Revisa tu correo para verificar la cuenta!", "success");
-            
-            // Retrasar la redirección ligeramente (ej: 1.5s) para que el usuario vea el mensaje
-            setTimeout(() => {
-                window.location.href = "./login.html";
-            }, 1500);
-        });
-    </script>
+        // ⭐ ELIMINAMOS LA INSERCIÓN EXPLICITA EN 'usuarios' (Paso 2)
+        // Ahora dependemos del trigger de Supabase.
+
+        if (error || !data.user) {
+            mostrarMensaje("Error al registrar usuario: " + (error?.message || "Email ya registrado."), "error");
+            console.error(error);
+            return;
+        }
+
+        mostrarMensaje("Registro completado. Tu cuenta está pendiente de aprobación por el administrador. ¡Revisa tu correo para verificar la cuenta!", "success");
+        
+        // Redirección
+        setTimeout(() => {
+            window.location.href = "./login.html";
+        }, 1500);
+    });
+</script>
 </body>
 </html>

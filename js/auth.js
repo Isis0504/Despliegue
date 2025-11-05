@@ -49,6 +49,7 @@ export async function login(email, password) {
       id: userId,
       email: data.user.email,
       nombre: usuario.nombre,
+      casa_numero: usuario.casa_numero,
       rol: usuario.rol,
       estado: usuario.estado,
     })
@@ -79,9 +80,9 @@ export async function verificarSesion(rolesPermitidos = []) {
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data?.user) {
-    window.location.href = "../login.html";
-    return;
-  }
+    window.location.href = "../login.html"; // Redirige si NO hay sesión activa en Supabase
+    return;
+}
 
   const userId = data.user.id;
   const { data: usuario, error: rolError } = await supabase
@@ -115,7 +116,19 @@ export async function verificarSesion(rolesPermitidos = []) {
  * Cierra sesión y limpia almacenamiento
  */
 export async function logout() {
-  await supabase.auth.signOut();
-  localStorage.removeItem("usuario");
-  window.location.href = "../login.html";
+    await supabase.auth.signOut();
+    localStorage.removeItem("usuario");
+
+    // ⭐ CLAVE DE SEGURIDAD: Reemplazar el estado actual del historial
+    // Esto hace que la página actual (el dashboard) sea reemplazada por la página de login
+    // en la pila del historial del navegador.
+    try {
+        window.history.replaceState({}, '', '../login.html'); 
+    } catch (e) {
+        // En caso de error (raro), simplemente se registra una advertencia
+        console.warn("No se pudo usar replaceState, usando redirección simple:", e);
+    }
+    
+    // Finalmente, redirigir a la página de inicio de sesión
+    window.location.href = "../login.html";
 }

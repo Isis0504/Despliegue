@@ -1,17 +1,6 @@
 // modules/mensajes.js
 import { supabase } from "../js/supabaseClient.js";
-import { mostrarMensaje } from "../js/utils.js";
-
-/**
- * Módulo Mensajes (Anuncios, Actividades calendario mes actual, Foro)
- * - render(contenedor) --> inicializa vista según rol (admin o residente/comite)
- *
- * Requisitos:
- * - tabla "anuncios" (id, titulo, contenido, fecha)
- * - tabla "actividades" (id, titulo, fecha)
- * - tabla "foro_mensajes" (id, usuario_id, mensaje, fecha)
- * - tabla "usuarios" debe existir para el join en foro
- */
+import { mostrarMensaje, filtrarMalasPalabras } from "../js/utils.js";
 
 export async function render(contenedor) {
   const usuario = JSON.parse(localStorage.getItem("usuario"));
@@ -378,7 +367,7 @@ async function cargarForo() {
 
   const { data, error } = await supabase
     .from("foro_mensajes")
-    .select("id, mensaje, fecha, usuarios (nombre)")
+    .select("id, mensaje, fecha, usuarios (nombre, casa_numero)")
     .order("fecha", { ascending: false });
 
   if (error) {
@@ -397,7 +386,7 @@ async function cargarForo() {
     const el = document.createElement("div");
     el.className = "foro-item";
     const autor = document.createElement("strong");
-    autor.textContent = m.usuarios?.nombre || "Usuario";
+    autor.textContent = `${m.usuarios?.casa_numero || "—"} - ${m.usuarios?.nombre || "Usuario"}`;
     el.appendChild(autor);
     const txt = document.createElement("p");
     txt.textContent = m.mensaje;
@@ -410,24 +399,47 @@ async function cargarForo() {
 }
 
 function montarFormForo(usuario_id) {
-  const cont = document.getElementById("formForo");
-  cont.innerHTML = `
-    <textarea id="mensajeForo" placeholder="Escribe un mensaje..." rows="3"></textarea>
-    <div class="form-actions">
-      <button id="btnEnviarForo" class="btn">Enviar</button>
-      <button id="btnLimpiarForo" class="btn ghost">Limpiar</button>
-    </div>
-  `;
-  document.getElementById("btnEnviarForo").addEventListener("click", async () => {
-    const mensaje = document.getElementById("mensajeForo").value.trim();
-    if (!mensaje) return mostrarMensaje("Escribe algo antes de enviar", "error");
-    const { error } = await supabase.from("foro_mensajes").insert([{ usuario_id, mensaje }]);
-    if (error) { console.error(error); return mostrarMensaje("No se pudo enviar", "error"); }
-    mostrarMensaje("Mensaje publicado", "success");
-    document.getElementById("mensajeForo").value = "";
-    await cargarForo();
-  });
-  document.getElementById("btnLimpiarForo").addEventListener("click", () => {
-    document.getElementById("mensajeForo").value = "";
-  });
+    const cont = document.getElementById("formForo");
+    cont.innerHTML = `
+        <textarea id="mensajeForo" placeholder="Escribe un mensaje..." rows="3"></textarea>
+        
+        <small class="disclaimer">
+            Al publicar, confirmas que tienes los derechos de autor sobre el contenido o es de dominio público, y aceptas que el mensaje será **filtrado automáticamente** para evitar lenguaje inapropiado.
+        </small>
+        
+        <div class="form-actions">
+            <button id="btnEnviarForo" class="btn">Enviar</button>
+            <button id="btnLimpiarForo" class="btn ghost">Limpiar</button>
+        </div>
+    `;
+    document.getElementById("btnEnviarForo").addEventListener("click", async () => {
+        const mensajeInput = document.getElementById("mensajeForo");
+        let mensaje = mensajeInput.value.trim(); // Obtener mensaje original
+
+        if (!mensaje) return mostrarMensaje("Escribe algo antes de enviar", "error");
+
+        // 2. CORRECCIÓN: Aplicar el filtro
+        const mensajeFiltrado = filtrarMalasPalabras(mensaje);
+
+        // Insertar el mensaje filtrado
+        const { error } = await supabase.from("foro_mensajes").insert([{ 
+            usuario_id, 
+            mensaje: mensajeFiltrado // Usamos el valor censurado
+        }]);
+        
+        if (error) { console.error(error); return mostrarMensaje("No se pudo enviar", "error"); }
+        
+        // Notificación de éxito y, opcionalmente, de filtro
+        if (mensaje !== mensajeFiltrado) {
+             mostrarMensaje("Mensaje publicado. Se aplicó el filtro de palabras.", "alerta");
+        } else {
+             mostrarMensaje("Mensaje publicado", "success");
+        }
+        
+        mensajeInput.value = "";
+        await cargarForo();
+    });
+    document.getElementById("btnLimpiarForo").addEventListener("click", () => {
+        document.getElementById("mensajeForo").value = "";
+    });
 }

@@ -16,11 +16,15 @@ export async function cargarSeguimiento() {
 
   const contenedor = document.getElementById("modSeguimiento");
   contenedor.innerHTML = `
-    <h2>Seguimiento de Solicitudes</h2>
-    <p>Aquí puedes revisar y actualizar el estado y responder a las solicitudes.</p>
+  <h2 class="tituloModulo">Seguimiento de Solicitudes</h2>
 
-    <div class="filtros">
-      <input type="text" id="buscarNombre" placeholder="Buscar por nombre..." />
+  <div class="formContainer">
+    <div class="input-group">
+      <label for="buscarNombre">Buscar por nombre</label>
+      <input type="text" id="buscarNombre" placeholder="Escribe un nombre...">
+    </div>
+    <div class="input-group">
+      <label for="filtrarEstado">Filtrar por estado</label>
       <select id="filtrarEstado">
         <option value="">Todos los estados</option>
         <option value="pendiente">Pendiente</option>
@@ -28,9 +32,10 @@ export async function cargarSeguimiento() {
         <option value="resuelta">Resuelta</option>
       </select>
     </div>
+  </div>
 
-    <div id="listaSeguimiento"></div>
-  `;
+  <div id="listaSeguimiento"></div>
+`;
 
   const lista = document.getElementById("listaSeguimiento");
   const inputBuscar = document.getElementById("buscarNombre");
@@ -46,7 +51,7 @@ export async function cargarSeguimiento() {
         estado,
         fecha,
         evidencia_url,
-        usuarios:usuario_id (nombre),
+        usuarios:usuario_id (nombre, casa_numero),
         seguimiento (
           id,
           comentario,
@@ -84,72 +89,79 @@ export async function cargarSeguimiento() {
     }
 
     lista.innerHTML = `
-      <table class="tabla">
-        <thead>
-          <tr>
-            <th>Residente</th>
-            <th>Título</th>
-            <th>Descripción</th>
-            <th>Estado</th>
-            <th>Seguimiento</th>
-            <th>Evidencia</th>
-            <th>Actualizar</th>
+  <table class="tablaEstilo">
+    <thead>
+      <tr>
+        <th>Residente</th>
+        <th>Título</th>
+        <th>Descripción</th>
+        <th>Estado</th>
+        <th>Seguimiento</th>
+        <th>Evidencia</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${solicitudes
+        .map(
+          (s) => `
+          <tr data-id="${s.id}">
+            <td>${s.usuarios?.casa_numero || "—"} - ${s.usuarios?.nombre || "—"}</td>
+            <td>${s.titulo}</td>
+            <td>${s.descripcion}</td>
+            <td>
+              <span class="status-tag status-${s.estado.replace(" ", "-")}">
+                ${s.estado}
+              </span>
+            </td>
+            <td>
+              <div class="comentarios">
+                ${
+                  s.seguimiento?.length
+                    ? s.seguimiento
+                        .map(
+                          (c) =>
+                            `<p><strong>${new Date(
+                              c.fecha
+                            ).toLocaleString()}:</strong> ${c.comentario}</p>`
+                        )
+                        .join("")
+                    : "<em class='solo-lectura'>Sin comentarios</em>"
+                }
+              </div>
+              <textarea
+                class="nuevoComentario"
+                placeholder="Agregar comentario..."
+              ></textarea>
+            </td>
+            <td>
+              ${
+                s.evidencia_url
+                  ? `<a href="${s.evidencia_url}" target="_blank">Ver archivo</a>`
+                  : "—"
+              }
+            </td>
+            <td>
+              <select class="cambiarEstado">
+                <option value="pendiente" ${
+                  s.estado === "pendiente" ? "selected" : ""
+                }>Pendiente</option>
+                <option value="en proceso" ${
+                  s.estado === "en proceso" ? "selected" : ""
+                }>En proceso</option>
+                <option value="resuelta" ${
+                  s.estado === "resuelta" ? "selected" : ""
+                }>Resuelta</option>
+              </select>
+              <button class="btn-small btnPrimario guardarCambios">Guardar</button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          ${solicitudes
-            .map(
-              (s) => `
-              <tr data-id="${s.id}">
-                <td>${s.usuarios?.nombre || "—"}</td>
-                <td>${s.titulo}</td>
-                <td>${s.descripcion}</td>
-                <td><span class="estado ${s.estado}">${s.estado}</span></td>
-                <td>
-                  <div class="comentarios">
-                    ${
-                      s.seguimiento?.length
-                        ? s.seguimiento
-                            .map(
-                              (c) =>
-                                `<p><strong>${new Date(
-                                  c.fecha
-                                ).toLocaleString()}:</strong> ${c.comentario}</p>`
-                            )
-                            .join("")
-                        : "<em>Sin comentarios</em>"
-                    }
-                  </div>
-                  <textarea class="nuevoComentario" placeholder="Agregar comentario..."></textarea>
-                </td>
-                <td>
-                  ${
-                    s.evidencia_url
-                      ? `<a href="${s.evidencia_url}" target="_blank">Ver archivo</a>`
-                      : "—"
-                  }
-                </td>
-                <td>
-                  <select class="cambiarEstado">
-                    <option value="pendiente" ${
-                      s.estado === "pendiente" ? "selected" : ""
-                    }>Pendiente</option>
-                    <option value="en proceso" ${
-                      s.estado === "en proceso" ? "selected" : ""
-                    }>En proceso</option>
-                    <option value="resuelta" ${
-                      s.estado === "resuelta" ? "selected" : ""
-                    }>Resuelta</option>
-                  </select>
-                  <button class="guardarCambios">Guardar</button>
-                </td>
-              </tr>
-            `
-            )
-            .join("")}
-        </tbody>
-      </table>
-    `;
+        `
+        )
+        .join("")}
+    </tbody>
+  </table>
+`;
 
     document.querySelectorAll(".guardarCambios").forEach((btn) => {
       btn.addEventListener("click", async (e) => {

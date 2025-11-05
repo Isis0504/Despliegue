@@ -1,15 +1,18 @@
 // js/utils.js
 // utils.js
 
+// ⬅️ AGREGADO: Lista de palabras a censurar
+const MALAS_PALABRAS = ['estúpido', 'idiota', 'grosería1', 'grosería2', 'mierda', 'pendejo', 'imbécil', 'cabrón']; 
+
 export function formatearFecha(fecha) {
-  if (!fecha) return "";
-  const f = new Date(fecha);
-  if (isNaN(f)) return fecha; // si no es una fecha válida, la devuelve tal cual
-  return f.toLocaleDateString("es-CO", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+    if (!fecha) return "";
+    const f = new Date(fecha);
+    if (isNaN(f)) return fecha; // si no es una fecha válida, la devuelve tal cual
+    return f.toLocaleDateString("es-CO", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
 }
 
 // Si tienes otras utilidades, asegúrate de exportarlas también, por ejemplo:
@@ -52,8 +55,8 @@ export function mostrarMensaje(mensaje, tipo = "info") {
 
 /**
 * @param {string} mensaje - La pregunta de confirmación.
- * @returns {Promise<boolean>} - Resuelve a 'true' si acepta, 'false' si cancela.
- */
+* @returns {Promise<boolean>} - Resuelve a 'true' si acepta, 'false' si cancela.
+*/
 export function mostrarConfirmacion(mensaje) {
     return new Promise((resolve) => {
         // 1. Crear el modal
@@ -90,51 +93,89 @@ export function mostrarConfirmacion(mensaje) {
     });
 }
 
+// ⬅️ AGREGADO: Función para filtrar contenido (usada en mensajes.js)
+/**
+ * Filtra un mensaje reemplazando las malas palabras con asteriscos.
+ * @param {string} mensaje El mensaje a filtrar.
+ * @returns {string} El mensaje filtrado.
+ */
+export function filtrarMalasPalabras(mensaje) {
+    let mensajeFiltrado = mensaje;
+    MALAS_PALABRAS.forEach(palabra => {
+        // Expresión regular para buscar la palabra completa (insensible a mayúsculas/minúsculas)
+        const regex = new RegExp(`\\b${palabra}\\b`, 'gi'); 
+        const reemplazo = '*'.repeat(palabra.length);
+        mensajeFiltrado = mensajeFiltrado.replace(regex, reemplazo);
+    });
+    return mensajeFiltrado;
+}
+
+
 // js/utils.js
 export async function cargarModulo(idModulo) {
-  const seccion = document.getElementById(idModulo);
-  if (!seccion) return;
+    const seccion = document.getElementById(idModulo);
+    if (!seccion) return;
 
-  // Detecta si estás en /admin/, /residente/ o /comite/
-  const baseRuta = window.location.pathname.includes("/admin/") ||
-                   window.location.pathname.includes("/residente/") ||
-                   window.location.pathname.includes("/comite/")
-    ? "../modules/"
-    : "./modules/";
+    // Detecta la ruta base
+    // Si estás en /admin/, /residente/ o /comite/ la ruta a /modules/ es ../modules/
+    // Si estás en la raíz (ej: index.html), la ruta a /modules/ es ./modules/
+    const baseRuta = window.location.pathname.includes("/admin/") ||
+                        window.location.pathname.includes("/residente/") ||
+                        window.location.pathname.includes("/comite/")
+        ? "../modules/" // Desde dashboard.html dentro de una subcarpeta
+        : "./modules/"; // Desde un archivo en la raíz
 
-  const mapa = {
-    modPerfil: `${baseRuta}perfil.js`,
-    modPagos: `${baseRuta}pagos.js`,
-    modSolicitudes: `${baseRuta}solicitudes.js`,
-    modReservas: `${baseRuta}reservas.js`,
-    modCertificados: `${baseRuta}certificados.js`,
-    modMensajes: `${baseRuta}mensajes.js`,
-    modSeguimiento: `${baseRuta}seguimiento.js`,
-  };
+    const mapa = {
+        modPerfil: `${baseRuta}perfil.js`,
+        modPagos: `${baseRuta}pagos.js`,
+        modSolicitudes: `${baseRuta}solicitudes.js`,
+        modReservas: `${baseRuta}reservas.js`,
+        modCertificados: `${baseRuta}certificados.js`,
+        modMensajes: `${baseRuta}mensajes.js`,
+        modSeguimiento: `${baseRuta}seguimiento.js`,
+        modReportes: `${baseRuta}adminReportes.js`,
+    };
 
-  const archivo = mapa[idModulo];
-  if (!archivo) {
-    seccion.innerHTML = "<p>Módulo no encontrado.</p>";
-    return;
-  }
+    const archivo = mapa[idModulo];
+    if (!archivo) {
+        seccion.innerHTML = "<p>Módulo no encontrado.</p>";
+        return;
+    }
 
-  try {
-    seccion.innerHTML = "<p>Cargando módulo...</p>";
-    const modulo = await import(archivo);
-    seccion.innerHTML = "";
-    modulo.render(seccion);
-  } catch (error) {
-    seccion.innerHTML = `<p>Error al cargar el módulo: ${error.message}</p>`;
-    console.error("Error al cargar el módulo:", error);
-  }
+    try {
+        seccion.innerHTML = "<p>Cargando módulo...</p>";
+        const modulo = await import(archivo);
+        seccion.innerHTML = "";
+        modulo.render(seccion);
+    } catch (error) {
+        seccion.innerHTML = `<p>Error al cargar el módulo: ${error.message}</p>`;
+        console.error("Error al cargar el módulo:", error);
+    }
 }
 
 /**
- * @param {string} mensaje El texto que se mostrará.
- * @param {('success'|'error'|'info')} [tipo='info'] El tipo de mensaje (para color).
- */
+* Exporta un array de objetos a un archivo XLSX.
+* @param {Array<Object>} data El array de objetos a exportar.
+* @param {string} filename Nombre del archivo de salida.
+* @param {string} sheetName Nombre de la hoja de cálculo.
+*/
+export function exportToXLSX(data, filename = 'reporte', sheetName = 'Datos') {
+    if (!window.XLSX) {
+        return mostrarMensaje("Error: La librería XLSX no está cargada. Verifica el script en el HTML.", "error");
+    }
 
+    if (!data || data.length === 0) {
+        return mostrarMensaje("No hay datos para exportar.", "alerta");
+    }
 
+    // 1. Crear la hoja de trabajo
+    const ws = window.XLSX.utils.json_to_sheet(data);
 
+    // 2. Crear el libro de trabajo
+    const wb = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-
+    // 3. Escribir y descargar el archivo
+    window.XLSX.writeFile(wb, `${filename}.xlsx`);
+    mostrarMensaje("Reporte exportado con éxito!", "success");
+}

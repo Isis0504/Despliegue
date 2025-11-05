@@ -48,12 +48,12 @@ export async function render(contenedor) {
     <style>
       /* Colores del calendario */
       .libre {
-        background-color: #e6f4ff;
-        border: 1px solid #90caf9;
+        background-color: #eaffe6ff;
+        border: 1px solid #b2f9a7ff;
       }
       .pendiente {
-        background-color: #fff3e0;
-        border: 1px solid #ffb84d;
+        background-color: #f7fad5ff;
+        border: 1px solid #fff34dff;
       }
       .ocupado {
         background-color: #fdecea;
@@ -114,7 +114,7 @@ export async function render(contenedor) {
       .from("reservas")
       .select(`
         id, usuario_id, nombre_area, fecha, hora_inicio, hora_fin, estado, motivo, creado_en,
-        usuarios:usuario_id (nombre)
+        usuarios:usuario_id (nombre, casa_numero)
       `)
       .gte("fecha", inicio)
       .lt("fecha", fin)
@@ -185,8 +185,8 @@ export async function render(contenedor) {
       <div style="flex:1;padding-left:20px;">
         <strong>Leyenda:</strong>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
-          <div style="background:#e6f4ff;border:1px solid #90caf9;padding:4px 8px;border-radius:6px;">Libre</div>
-          <div style="background:#fff3e0;border:1px solid #ffb84d;padding:4px 8px;border-radius:6px;">Pendiente</div>
+          <div style="background:#E3FAEC;border:1px solid #b2f9a7ff;padding:4px 8px;border-radius:6px;">Libre</div>
+          <div style="background:#fdffe0ff;border:1px solid #fff34dff;padding:4px 8px;border-radius:6px;">Pendiente</div>
           <div style="background:#fdecea;border:1px solid #f5c6cb;padding:4px 8px;border-radius:6px;">Ocupado</div>
           <div style="background:#e3e9ff;border:1px solid #9ea8ff;padding:4px 8px;border-radius:6px;">Rechazada</div>
         </div>
@@ -255,7 +255,7 @@ export async function render(contenedor) {
                 <td>${r.nombre_area}</td>
                 <td>${new Date(r.fecha).toLocaleDateString()}</td>
                 <td>${r.hora_inicio?.slice(0,5)} - ${r.hora_fin?.slice(0,5)}</td>
-                <td>${r.usuarios?.nombre || "-"}</td>
+                <td>${r.usuarios?.casa_numero || "—"} - ${r.usuarios?.nombre || "—"}</td>
                 <td>${r.estado === "aprobada" ? "Ocupado" : r.estado}</td>
                 <td>${r.motivo || "—"}</td>
                 ${rol === "administrador" ? `
