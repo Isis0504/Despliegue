@@ -2,7 +2,8 @@
 // utils.js
 
 // ⬅️ AGREGADO: Lista de palabras a censurar
-const MALAS_PALABRAS = ['estúpido', 'idiota', 'grosería1', 'grosería2', 'mierda', 'pendejo', 'imbécil', 'cabrón']; 
+const MALAS_PALABRAS = [
+  'estúpido', 'estupido', 'idiota', 'mierda', 'pendejo', 'pendeja', 'imbécil', 'imbecil', 'cabrón', 'cabron', 'puta', 'puto', 'putita', 'zorra', 'zorro', 'perra', 'perro', 'ladrona', 'ladron', 'ladrón', 'asqueroso', 'asquerosa', 'malparido', 'malparida', 'gonorrea', 'hijueputa', 'hijueputo', 'hijo de puta', 'imbecil', 'imbécil', 'baboso', 'babosa', 'tarado', 'tarada', 'estupida', 'estúpida', 'careverga', 'culero', 'culera', 'maldito', 'maldita', 'chingada', 'chingado', 'jodido', 'jodida'];
 
 export function formatearFecha(fecha) {
     if (!fecha) return "";
