@@ -3,7 +3,6 @@ import { supabase } from "../js/supabaseClient.js";
 import { exportToXLSX, mostrarMensaje } from "../js/utils.js";
 
 const TABLAS = [
-    // La clave 'tabla' usa tu nombre real en la DB. La clave 'orden' usa tu columna de fecha.
     { id: "pagos", nombre: "Pagos", tabla: "pagos", orden: "creado_en" },
     { id: "reservas", nombre: "Reservas", tabla: "reservas", orden: "creado_en" },
     { id: "certificados", nombre: "Certificados", tabla: "solicitudes_certificados", orden: "fecha_solicitud" },
@@ -41,11 +40,14 @@ async function handleDescargar(button) {
     const originalText = button.textContent;
     button.textContent = `Cargando ${nombre}...`;
     
-    // Obtener todos los datos de la tabla, usando la columna de orden específica
+    // 🔹 Consulta con relación al usuario
     const { data, error } = await supabase
         .from(tabla)
-        .select("*") 
-        .order(columnaOrden, { ascending: false }); 
+        .select(`
+            *,
+            usuario:usuarios(nombre, casa_numero)
+        `)
+        .order(columnaOrden, { ascending: false });
 
     button.disabled = false;
     button.textContent = originalText;
@@ -56,6 +58,13 @@ async function handleDescargar(button) {
         return;
     }
 
+    // 🔹 Limpieza: mostrar datos legibles
+    const datosLimpios = data.map(item => ({
+        ...item,
+        nombre_residente: item.usuario?.nombre || "Desconocido",
+        casa: item.usuario?.casa_numero || "N/A",
+    }));
+
     const filename = `${nombre.replace(/\s/g, '_')}_${new Date().toISOString().slice(0, 10)}`;
-    exportToXLSX(data, filename, nombre);
+    exportToXLSX(datosLimpios, filename, nombre);
 }
