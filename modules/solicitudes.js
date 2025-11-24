@@ -119,23 +119,26 @@ async function cargarListaSolicitudes() {
   const userId = usuario?.id;
 
   const { data, error } = await supabase
-    .from("solicitudes")
-    .select(`
-      id,
-      titulo,
-      descripcion,
-      evidencia_url,
-      estado,
-      fecha,
-      seguimiento (
-        id,
-        comentario,
-        fecha,
-        usuario_id
-      )
-    `)
-    .eq("usuario_id", userId)
-    .order("fecha", { ascending: false });
+  .from("solicitudes")
+  .select("*")
+  .eq("usuario_id", userId)
+  .order("fecha", { ascending: false });
+
+if (error) {
+  console.error("Error cargando solicitudes:", error);
+  return;
+}
+
+// Traer seguimiento manualmente
+for (let s of data) {
+  const { data: comentarios } = await supabase
+    .from("seguimiento")
+    .select("*")
+    .eq("solicitud_id", s.id)
+    .order("fecha", { ascending: true });
+
+  s.seguimiento = comentarios || [];
+}
 
   if (error) {
     console.error("Error cargando solicitudes:", error);
@@ -147,6 +150,9 @@ async function cargarListaSolicitudes() {
     lista.innerHTML = "<p>No tienes solicitudes registradas.</p>";
     return;
   }
+
+console.log("SEGUIMIENTO RECIBIDO:", s.seguimiento);
+
 
   // Mapa de estados a clases CSS
   const estadoClase = (estado) => {

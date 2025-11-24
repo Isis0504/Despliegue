@@ -43,23 +43,41 @@ export async function cargarSeguimiento() {
 
   async function cargarYRenderizar() {
     const { data, error } = await supabase
-      .from("solicitudes")
-      .select(`
-        id,
-        titulo,
-        descripcion,
-        estado,
-        fecha,
-        evidencia_url,
-        usuarios:usuario_id (nombre, casa_numero),
-        seguimiento (
-          id,
-          comentario,
-          fecha,
-          usuario_id
-        )
-      `)
-      .order("fecha", { ascending: false });
+  .from("solicitudes")
+  .select(`
+    id,
+    titulo,
+    descripcion,
+    estado,
+    fecha,
+    evidencia_url,
+    usuarios:usuario_id (nombre, casa_numero)
+  `)
+  .order("fecha", { ascending: false });
+
+if (error) {
+  console.error("Error al cargar solicitudes:", error);
+  alert("Error al cargar las solicitudes");
+  return;
+}
+
+// Traer seguimiento manualmente
+for (let s of data) {
+  const { data: comentarios } = await supabase
+    .from("seguimiento")
+    .select("*")
+    .eq("solicitud_id", s.id)
+    .order("fecha", { ascending: true });
+
+  s.seguimiento = comentarios || [];
+}
+
+console.log("GUARDANDO:", {
+  solicitud_id: id,
+  user_id: user.id,
+  comentario
+});
+
 
     if (error) {
       console.error("Error al cargar solicitudes:", error);
