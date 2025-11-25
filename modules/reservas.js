@@ -236,8 +236,27 @@ export async function render(contenedor) {
         return coincideTexto && coincideEstado;
       });
 
-      lista.innerHTML = `
-        <table class="tablaEstilo" style="width:100%">
+      if (rol !== "administrador") {
+  lista.innerHTML = `
+    <p style="
+      margin:15px 0;
+      padding:12px;
+      background:#ffecec;
+      color:#a30000;
+      border:1px solid #ffb3b3;
+      border-radius:6px;
+      font-size:14px;
+    ">
+      Si tu reserva fue <strong>rechazada</strong>, por favor acércate a la administración  
+      o registra una solicitud en el módulo correspondiente.
+    </p>
+  `;
+} else {
+  lista.innerHTML = "";
+}
+
+lista.innerHTML += `
+  <table class="tablaEstilo" style="width:100%">
           <thead>
             <tr>
               <th>Área</th>

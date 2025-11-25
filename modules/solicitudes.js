@@ -1,7 +1,6 @@
 import { supabase } from "../js/supabaseClient.js";
 
 export function render(contenedor) {
-  // Aseguramos que el contenedor tenga el ID correcto (aunque ya lo hace el dashboard)
   contenedor.id = "modSolicitudes";
   cargarSolicitudes();
 }
@@ -11,19 +10,17 @@ export async function cargarSolicitudes() {
   const userId = usuario?.id;
 
   if (!userId) {
-    // Usamos mostrarMensaje si está disponible, sino alert
     const modUtils = await import("../js/utils.js");
-    if (modUtils.mostrarMensaje) {
-        modUtils.mostrarMensaje("Error: No se encontró el usuario en sesión.", "error");
-    } else {
-        alert("Error: No se encontró el usuario en sesión.");
-    }
+    const mostrar = modUtils.mostrarMensaje || alert;
+    mostrar("Error: No se encontró el usuario en sesión.", "error");
     return;
   }
 
   const contenedor = document.getElementById("modSolicitudes");
   contenedor.innerHTML = `
-    <h2 class="tituloModulo">Mis Solicitudes</h2> <form id="nuevaSolicitudForm" class="formContainer"> 
+    <h2 class="tituloModulo">Mis Solicitudes</h2>
+
+    <form id="nuevaSolicitudForm" class="formContainer">
       <h3 style="color:var(--verde-principal); margin-bottom:15px;">Enviar nueva Solicitud</h3>
       
       <div class="input-group">
@@ -50,44 +47,44 @@ export async function cargarSolicitudes() {
     <div id="listaSolicitudes"></div>
   `;
 
-  // ... (Listeners de submit se mantienen igual) ...
   const form = document.getElementById("nuevaSolicitudForm");
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    // ... (Lógica de subir archivo y registrar se mantiene) ...
-    
-    // Simplificamos las alertas para que usen mostrarMensaje si existe
+
     const titulo = document.getElementById("tituloSolicitud").value.trim();
     const descripcion = document.getElementById("descripcionSolicitud").value.trim();
     const archivo = document.getElementById("archivoEvidencia").files[0];
 
-    const modUtils = await import("../js/utils.js"); // Importamos utils para mostrarMensaje
-    const funcMostrarMensaje = modUtils.mostrarMensaje || alert;
+    const modUtils = await import("../js/utils.js");
+    const mostrar = modUtils.mostrarMensaje || alert;
 
     if (!titulo || !descripcion) {
-      funcMostrarMensaje("Por favor completa todos los campos obligatorios.", "error");
+      mostrar("Por favor completa todos los campos obligatorios.", "error");
       return;
     }
 
     let evidenciaUrl = null;
 
+    // Subida de archivo (si hay)
     if (archivo) {
-      // ... (Lógica de subir archivo se mantiene) ...
       const nombreArchivo = `${userId}_${Date.now()}_${archivo.name}`;
+
       const { error: uploadError } = await supabase.storage
-         .from("evidencias")
-         .upload(nombreArchivo, archivo);
+        .from("evidencias")
+        .upload(nombreArchivo, archivo);
 
       if (uploadError) {
-        funcMostrarMensaje("Error al subir la evidencia: " + uploadError.message, "error");
+        mostrar("Error al subir la evidencia: " + uploadError.message, "error");
         console.error(uploadError);
-        return; // Detenemos la función si hay error de subida
-      } else {
-        const { data: publicUrl } = supabase.storage
-          .from("evidencias")
-          .getPublicUrl(nombreArchivo);
-        evidenciaUrl = publicUrl.publicUrl;
+        return;
       }
+
+      const { data: publicUrl } = supabase.storage
+        .from("evidencias")
+        .getPublicUrl(nombreArchivo);
+
+      evidenciaUrl = publicUrl.publicUrl;
     }
 
     const { error } = await supabase.from("solicitudes").insert([
@@ -102,10 +99,10 @@ export async function cargarSolicitudes() {
     ]);
 
     if (error) {
-      funcMostrarMensaje("Error al registrar la solicitud: " + error.message, "error");
+      mostrar("Error al registrar la solicitud: " + error.message, "error");
       console.error(error);
     } else {
-      funcMostrarMensaje("Solicitud registrada correctamente.", "success");
+      mostrar("Solicitud registrada correctamente.", "success");
       form.reset();
       cargarListaSolicitudes();
     }
@@ -120,25 +117,23 @@ async function cargarListaSolicitudes() {
 
   const { data, error } = await supabase
   .from("solicitudes")
-  .select("*")
+  .select(`
+      id,
+      titulo,
+      descripcion,
+      evidencia_url,
+      estado,
+      fecha,
+      seguimiento:seguimiento!solicitud_id (
+        id,
+        comentario,
+        fecha,
+        usuario_id
+      )
+  `)
   .eq("usuario_id", userId)
-  .order("fecha", { ascending: false });
-
-if (error) {
-  console.error("Error cargando solicitudes:", error);
-  return;
-}
-
-// Traer seguimiento manualmente
-for (let s of data) {
-  const { data: comentarios } = await supabase
-    .from("seguimiento")
-    .select("*")
-    .eq("solicitud_id", s.id)
-    .order("fecha", { ascending: true });
-
-  s.seguimiento = comentarios || [];
-}
+  .order("fecha", { ascending: false })
+  .order("fecha", { foreignTable: "seguimiento", ascending: false });
 
   if (error) {
     console.error("Error cargando solicitudes:", error);
@@ -146,29 +141,25 @@ for (let s of data) {
   }
 
   const lista = document.getElementById("listaSolicitudes");
+
   if (!data || data.length === 0) {
     lista.innerHTML = "<p>No tienes solicitudes registradas.</p>";
     return;
   }
 
-console.log("SEGUIMIENTO RECIBIDO:", s.seguimiento);
-
-
-  // Mapa de estados a clases CSS
   const estadoClase = (estado) => {
-      switch (estado) {
-          case 'aprobado':
-          case 'resuelta':
-              return 'status-tag status-aprobado';
-          case 'en proceso':
-              return 'status-tag status-en-proceso';
-          default:
-              return 'status-tag status-pendiente';
-      }
+    switch (estado) {
+      case "resuelta":
+        return "status-tag status-aprobado";
+      case "en proceso":
+        return "status-tag status-en-proceso";
+      default:
+        return "status-tag status-pendiente";
+    }
   };
 
   lista.innerHTML = `
-    <table class="tablaEstilo"> 
+    <table class="tablaEstilo">
       <thead>
         <tr>
           <th>Título</th>
@@ -183,37 +174,37 @@ console.log("SEGUIMIENTO RECIBIDO:", s.seguimiento);
         ${data
           .map(
             (s) => `
-            <tr>
-              <td>${s.titulo}</td>
-              <td>${s.descripcion}</td>
-              <td>
-                <span class="${estadoClase(s.estado)}">${s.estado}</span>
-              </td>
-              <td>${new Date(s.fecha).toLocaleDateString()}</td>
-              <td>
-                ${
-                  s.evidencia_url
-                    ? `<a href="${s.evidencia_url}" target="_blank" class="btnSecundario btn-small">Ver archivo</a>` // Botón secundario
-                    : "—"
-                }
-              </td>
-              <td style="font-size:0.9em;">
-                ${
-                  s.seguimiento?.length
-                    ? s.seguimiento
-                        .map(
-                          (c) =>
-                            `<p style="margin-bottom:5px;">
-                                <strong>${new Date(
-                                  c.fecha
-                                ).toLocaleDateString()}:</strong> ${c.comentario}
-                             </p>`
-                        )
-                        .join("")
-                    : "<em class='solo-lectura'>Sin respuesta</em>" // Clase de texto tenue
-                }
-              </td>
-            </tr>`
+          <tr>
+            <td>${s.titulo}</td>
+            <td>${s.descripcion}</td>
+            <td>
+              <span class="${estadoClase(s.estado)}">${s.estado}</span>
+            </td>
+            <td>${new Date(s.fecha).toLocaleDateString()}</td>
+            <td>
+              ${
+                s.evidencia_url
+                  ? `<a href="${s.evidencia_url}" target="_blank" class="btnSecundario btn-small">Ver archivo</a>`
+                  : "—"
+              }
+            </td>
+            <td style="font-size:0.9em;">
+              ${
+                s.seguimiento?.length
+                  ? s.seguimiento
+                      .map(
+                        (c) =>
+                          `<p style="margin-bottom:5px;">
+                              <strong>${new Date(
+                                c.fecha
+                              ).toLocaleDateString()}:</strong> ${c.comentario}
+                           </p>`
+                      )
+                      .join("")
+                  : "<em class='solo-lectura'>Sin respuesta</em>"
+              }
+            </td>
+          </tr>`
           )
           .join("")}
       </tbody>
